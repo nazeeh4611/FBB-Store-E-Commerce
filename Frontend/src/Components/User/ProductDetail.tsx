@@ -21,7 +21,7 @@ interface ProductData {
   brand: string
   priceINR: number
   priceAED: number
-  category: Category
+  subCategoryId: Category
   active: boolean
   images: ProductImages
   createdAt: string
@@ -76,6 +76,7 @@ export default function ProductPage() {
     try {
       setLoading(true)
       const response = await api.get(`/get-product/${id}`)
+      console.log(response.data,"dsrtdstsdfstdst")
       setProductData(response.data)
     } catch (error) {
       console.error("Error fetching product:", error)
@@ -86,7 +87,7 @@ export default function ProductPage() {
 
   const getRelated = async () => {
     try {
-      const category = productData?.category?._id
+      const category = productData?.subCategoryId?._id
       const response = await api.get(`/get-related/${category}`)
       setRelatedProducts(response.data)
     } catch (error) {
@@ -101,7 +102,7 @@ export default function ProductPage() {
   }, [id])
 
   useEffect(() => {
-    if (productData?.category?._id) {
+    if (productData?.subCategoryId?._id) {
       getRelated()
     }
   }, [productData])
@@ -132,7 +133,7 @@ export default function ProductPage() {
 • AED: ${productData.priceAED.toLocaleString()}
 
 🏷️ *Brand:* ${productData.brand}
-📦 *Category:* ${productData.category.name}
+📦 *Category:* ${productData.subCategoryId.name}
 
 🔍 *View Product:*
 ${productUrl}
@@ -354,7 +355,7 @@ I'm interested in this product. Could you please provide more information?`)
 <div className="space-y-2 pt-4 border-t">
 <div className="flex gap-2">
   <span className="font-semibold">CATEGORY:</span>
-  <span className="text-gray-600">{productData.category.name}</span>
+  <span className="text-gray-600">{productData.subCategoryId.name}</span>
 </div>
 </div>
 </div>

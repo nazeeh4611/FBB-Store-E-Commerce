@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
-import fbb from "./Img/fbb.png";  // Make sure this path matches your project structure
+import fbb from "./Img/fbb.png";
+import axios from 'axios';
+import { baseurl } from '../../Constant/Base';
+import { useNavigate } from 'react-router-dom';
 
 interface NavItem {
   label: string;
   href: string;
+  id?: string;
+}
+
+interface Category {
+  name: string;
+  image: string;
+  _id: string;
 }
 
 interface NavBarProps {
@@ -14,13 +24,35 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const navigate = useNavigate();
+  
+  const api = axios.create({
+    baseURL: baseurl
+  });
 
+  const getCategory = async () => {
+    try {
+      const response = await api.get("/get-category");
+      setCategories(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    getCategory();
+  }, []);
+
+  // Combine fixed nav items with first 4 dynamic categories
   const navItems: NavItem[] = [
     { label: 'Home', href: '/' },
-    { label: 'Shop', href: '/shop' },
-    { label: 'Category', href: '/category' },
-    { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact' },
+    ...categories.slice(0, 4).map(category => ({
+      label: category.name.toUpperCase(),
+      href: `/category/${category._id}`,
+      id: category._id
+    })),
+    { label: 'About', href: '/about' }
   ];
 
   useEffect(() => {
@@ -41,6 +73,15 @@ const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
     return isScrolled ? 'bg-black' : 'bg-transparent';
   };
 
+  const handleNavClick = (href: string, id?: string) => {
+    if (id) {
+      navigate(href);
+    } else {
+      navigate(href);
+    }
+    setIsOpen(false);
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 h-20 ${getBgColor()}`}
@@ -52,7 +93,8 @@ const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
             <img 
               src={fbb} 
               alt="Logo" 
-              className="h-16 w-auto object-contain"
+              className="h-16 w-auto object-contain cursor-pointer"
+              onClick={() => navigate('/')}
             />
           </div>
 
@@ -60,13 +102,13 @@ const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navItems.map((item) => (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
+                  onClick={() => handleNavClick(item.href, item.id)}
                   className="text-white hover:text-gray-300 transition-colors duration-300 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   {item.label}
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -93,14 +135,13 @@ const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
         <div className="md:hidden absolute w-full">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-black shadow-lg">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.label}
-                href={item.href}
-                className="text-white hover:text-gray-300 block px-3 py-2 rounded-md text-base font-medium"
-                onClick={() => setIsOpen(false)}
+                onClick={() => handleNavClick(item.href, item.id)}
+                className="text-white hover:text-gray-300 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
               >
                 {item.label}
-              </a>
+              </button>
             ))}
           </div>
         </div>

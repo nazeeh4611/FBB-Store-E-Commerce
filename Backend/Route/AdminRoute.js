@@ -1,5 +1,5 @@
 import express from "express";
-import { addCategory, getCategory, addProduct,getProducts,editProduct } from "../Controller/AdminController.js";
+import { addCategory, getCategory, addProduct,getProducts,editProduct, addSubcategory, getSubCategory } from "../Controller/AdminController.js";
 const adminRouter = express.Router();
 import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
@@ -63,6 +63,8 @@ const handleProductImages = (req, res, next) => {
 // Routes
 adminRouter.post("/add-category", categoryUpload.single('image'), addCategory);
 adminRouter.get("/get-category", getCategory);
+adminRouter.post("/add-subcategory", categoryUpload.single('image'), addSubcategory);
+adminRouter.get("/get-subcategory", getSubCategory);
 adminRouter.post("/add-product", productUpload.fields([
   { name: 'image1', maxCount: 1 },
   { name: 'image2', maxCount: 1 },

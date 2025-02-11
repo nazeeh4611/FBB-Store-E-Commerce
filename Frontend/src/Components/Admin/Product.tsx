@@ -4,11 +4,22 @@ import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
 
+// Modified interfaces - removed ProductType
+interface Category {
+  _id: string;
+  name: string;
+}
+
+interface SubCategory extends Category {
+  categoryId: Category;
+}
+
 interface Product {
   _id: string;
   name: string;
   brand: string;
-  category: Category;
+  categoryId: Category;
+  subCategoryId: SubCategory;
   priceINR: number;
   priceAED: number;
   images: string[];
@@ -17,28 +28,32 @@ interface Product {
   status?: 'LISTED' | 'UNLISTED';
 }
 
-interface Category {
-  _id: string;
-  name: string;
-}
-
 interface ProductFormData {
   name: string;
   brand: string;
-  category: string;
+  categoryId: string;
+  subCategoryId: string;
   priceINR: string;
   priceAED: string;
   images: (File | null)[];
 }
 
 const ProductPage = () => {
+  // States for data
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  
+  // State for filtered options
+  const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
+  
+  // Modal and form states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     brand: '',
-    category: '',
+    categoryId: '',
+    subCategoryId: '',
     priceINR: '',
     priceAED: '',
     images: [null, null, null, null],
@@ -50,10 +65,11 @@ const ProductPage = () => {
     baseURL: baseurl,
   });
 
+  // Fetch functions
   const getCategories = async () => {
     try {
       const response = await api.get("/admin/get-category");
-            if (response.data && Array.isArray(response.data)) {
+      if (response.data && Array.isArray(response.data)) {
         setCategories(response.data);
       }
     } catch (error) {
@@ -61,8 +77,45 @@ const ProductPage = () => {
     }
   };
 
+  const getSubCategories = async () => {
+    try {
+      const response = await api.get("/admin/get-subcategory");
+      if (response.data && Array.isArray(response.data)) {
+        setSubCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+    }
+  };
 
+  const getProducts = async () => {
+    try {
+      const response = await api.get("/admin/get-products");
+      if (response.data.products && Array.isArray(response.data.products)) {
+        setProducts(response.data.products);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
 
+  // Handle category change
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const categoryId = e.target.value;
+    setFormData({
+      ...formData,
+      categoryId,
+      subCategoryId: '',
+    });
+    
+    // Filter subcategories based on selected category
+    const filtered = subCategories.filter(
+      (subCat) => subCat.categoryId._id === categoryId
+    );
+    setFilteredSubCategories(filtered);
+  };
+
+  // Image handling functions
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -87,6 +140,7 @@ const ProductPage = () => {
     setImagePreviews(newPreviews);
   };
 
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -95,7 +149,8 @@ const ProductPage = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('brand', formData.brand);
-      formDataToSend.append('category', formData.category);
+      formDataToSend.append('categoryId', formData.categoryId);
+      formDataToSend.append('subCategoryId', formData.subCategoryId);
       formDataToSend.append('priceINR', formData.priceINR);
       formDataToSend.append('priceAED', formData.priceAED);
       
@@ -125,34 +180,21 @@ const ProductPage = () => {
     setFormData({
       name: '',
       brand: '',
-      category: '',
+      categoryId: '',
+      subCategoryId: '',
       priceINR: '',
       priceAED: '',
       images: [null, null, null, null],
     });
     setImagePreviews(['', '', '', '']);
-  };
-
-  const getProducts = async () => {
-    try {
-      const response = await api.get("/admin/get-products");
-      console.log(response.data.products)
-
-      if (response.data.products && Array.isArray(response.data.products)) {
-        setProducts(response.data.products);
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
+    setFilteredSubCategories([]);
   };
 
   useEffect(() => {
     getProducts();
     getCategories();
+    getSubCategories();
   }, []);
-
-
-  console.log(products,"this be the products")
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
@@ -185,53 +227,50 @@ const ProductPage = () => {
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Product Name</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Brand</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Category</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold">Sub Category</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Price (INR)</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Price (AED)</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Images</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Created At</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>
-  {products.map((product) => (
-    <tr
-      key={product._id}
-      className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-    >
-      <td className="py-4 px-4 text-gray-800">{product.name}</td>
-      <td className="py-4 px-4 text-gray-800">{product.brand}</td>
-      <td className="py-4 px-4 text-gray-800">{product.category.name}</td>
-      <td className="py-4 px-4 text-gray-800">₹{product.priceINR}</td>
-      <td className="py-4 px-4 text-gray-800">AED {product.priceAED}</td>
-      <td className="py-4 px-4">
-      <div className="flex space-x-2">
-  {product.images && Object.values(product.images).length > 0 && (
-    <img 
-      src={Object.values(product.images)[0]} 
-      alt={`${product.name} 1`}
-      className="w-12 h-12 object-cover rounded"
-    />
-  )}
-</div>
-
-      </td>
-      <td className="py-4 px-4 text-gray-600">
-        {new Date(product.createdAt).toLocaleDateString()}
-      </td>
-      <td className="py-4 px-4">
-        <span
-          className={`px-4 py-1.5 rounded-full text-sm font-medium ${
-            product.status === 'LISTED'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {product.status || 'UNLISTED'}
-        </span>
-      </td>
-    </tr>
-  ))}
-</tbody>
+                {products.map((product) => (
+                  <tr
+                    key={product._id}
+                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="py-4 px-4 text-gray-800">{product.name}</td>
+                    <td className="py-4 px-4 text-gray-800">{product.brand}</td>
+                    <td className="py-4 px-4 text-gray-800">{product.categoryId.name}</td>
+                    <td className="py-4 px-4 text-gray-800">{product.subCategoryId.name}</td>
+                    <td className="py-4 px-4 text-gray-800">₹{product.priceINR}</td>
+                    <td className="py-4 px-4 text-gray-800">AED {product.priceAED}</td>
+                    <td className="py-4 px-4">
+                      <div className="flex space-x-2">
+                        {product.images && Object.values(product.images).length > 0 && (
+                          <img 
+                            src={Object.values(product.images)[0]} 
+                            alt={`${product.name} 1`}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+                          product.status === 'LISTED'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {product.status || 'UNLISTED'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         </div>
@@ -283,8 +322,8 @@ const ProductPage = () => {
                         Category
                       </label>
                       <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        value={formData.categoryId}
+                        onChange={handleCategoryChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required
                       >
@@ -292,6 +331,26 @@ const ProductPage = () => {
                         {categories.map((category) => (
                           <option key={category._id} value={category._id}>
                             {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Sub Category
+                      </label>
+                      <select
+                        value={formData.subCategoryId}
+                        onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                        disabled={!formData.categoryId}
+                      >
+                        <option value="">Select Sub Category</option>
+                        {filteredSubCategories.map((subCategory) => (
+                          <option key={subCategory._id} value={subCategory._id}>
+                            {subCategory.name}
                           </option>
                         ))}
                       </select>
@@ -311,7 +370,7 @@ const ProductPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700mb-2">
                         Price (AED)
                       </label>
                       <input
@@ -363,8 +422,7 @@ const ProductPage = () => {
                               <p className="text-xs text-gray-500">
                                 PNG, JPG up to 10MB
                               </p>
-
-                              </div>
+                            </div>
                           )}
                         </div>
                       ))}

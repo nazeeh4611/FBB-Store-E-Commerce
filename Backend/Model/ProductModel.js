@@ -23,7 +23,11 @@ const ProductSchema = new mongoose.Schema({
     image3: { type: String },
     image4: { type: String }
   },
-  category: {
+  subCategoryId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'subcategory',
+  },
+  categoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: true

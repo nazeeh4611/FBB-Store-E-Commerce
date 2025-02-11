@@ -11,11 +11,24 @@ import glass from "../Layouts/Img/glass.jpeg";
 import banner1 from "../Layouts/Img/banner1.jpg";
 import slider1 from "../Layouts/Img/slider1.jpg";
 import TrendingCarousel from "./Carousel";
+import axios from "axios";
+import { baseurl } from "../../Constant/Base";
+import { useNavigate } from "react-router-dom";
 
+
+interface Category{
+  name:string,
+  image:string,
+  _id:string
+}
 const Hero = ({ onShopNowClick = () => {} }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-
+  const [categories,setCategories] = useState<Category[]>([])
+  const navigate = useNavigate()
+  const api = axios.create({
+    baseURL:baseurl
+  })
   const heroSlides = [
     {
       image: slider1,
@@ -42,7 +55,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     deleteSpeed: 50
   });
 
-  // Auto-rotate hero slides every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length);
@@ -50,28 +62,27 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const categories = [
-    {
-      title: "Watches",
-      image: watch,
-      count: 125,
-    },
-    {
-      title: "T-Shirts",
-      image: tshirt,
-      count: 84,
-    },
-    {
-      title: "Sunglasses",
-      image: glass,
-      count: 45,
-    },
-    {
-      title: "Shoes",
-      image: shoe,
-      count: 97,
-    },
-  ];
+  const getCategory = async()=>{
+    try {
+        const response = await api.get("/get-category")
+        console.log(response.data,"may here")
+        setCategories(response.data)
+    } catch (error) {
+        console.error(error)
+    }
+  }
+
+
+  const handlecategoryClick = (categoryId:string)=>{
+    navigate(`/category/${categoryId}`)
+
+  }
+  
+  useEffect(()=>{
+    getCategory()
+  },[])
+
+
 
   const bannerSlides = [
     {
@@ -155,17 +166,17 @@ const Hero = ({ onShopNowClick = () => {} }) => {
                 key={index}
                 className="bg-white rounded-lg shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
               >
-                <div className="relative h-96">
+                <div className="relative h-96"  onClick={()=>handlecategoryClick(category._id)}>
                   <img
                     src={category.image}
-                    alt={category.title}
+                    alt={category.name}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/10 transition-opacity hover:opacity-0" />
                 </div>
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{category.title}</h3>
-                  <p className="text-sm text-gray-600">{category.count} Products</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
+                  <p className="text-sm text-gray-600"> Products</p>
                 </div>
               </div>
             ))}

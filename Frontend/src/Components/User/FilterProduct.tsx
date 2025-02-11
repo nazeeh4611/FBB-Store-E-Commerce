@@ -48,7 +48,7 @@ export default function FilterProduct() {
   const [productsPerRow, setProductsPerRow] = useState(3)
   const [allProducts, setAllProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
- const {category} = useParams()
+ const {category,id} = useParams()
  console.log(category)
   const toggleFavorite = (productName: string) => {
     setFavorites((prev) => ({
@@ -71,7 +71,7 @@ export default function FilterProduct() {
 
   const getCategories = async () => {
     try {
-      const response = await api.get("/get-category")
+      const response = await api.get(`/get-category/${category}`)
       if (response.data && Array.isArray(response.data)) {
         setCategories(response.data)
       }
@@ -84,7 +84,7 @@ export default function FilterProduct() {
     try {
         console.log("first")
         console.log(category)
-      const response = await api.get(`/get-related/${category}`)
+      const response = await api.get(`/get-related/${id}`)
       console.log(response.data,"this may prod")
       if (response.data && Array.isArray(response.data)) {
         setAllProducts(response.data)

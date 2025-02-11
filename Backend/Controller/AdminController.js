@@ -1,5 +1,6 @@
 import productModel from "../Model/ProductModel.js";
 import categoryModel from "../Model/CategoryModel.js";
+import subcategoryModel from "../Model/SubCategoryModel.js";
 
 export const addCategory = async (req, res) => {
   try {
@@ -36,15 +37,54 @@ export const getCategory = async (req, res) => {
   }
 };
 
+
+export const addSubcategory = async(req,res)=>{
+  try {
+    const { name,categoryId } = req.body;
+    const image = req.file?.location;
+    
+    if (!name || !image) {
+      return res.status(400).json({ message: "Name and image are required" });
+    }
+    
+    const newCategory = new subcategoryModel({
+      name,
+      categoryId,
+      image
+    });
+    
+    await newCategory.save();
+    res.status(201).json({ message: "Category added successfully", category: newCategory });
+  } catch (error) {
+    console.error("Error adding category:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export const getSubCategory = async (req, res) => {
+  try {
+    const subcategories = await subcategoryModel.find().populate('categoryId');
+    if (!subcategories.length) {
+      return res.status(404).json({ message: "No categories found" });
+    }
+    res.status(200).json(subcategories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
 export const addProduct = async (req, res) => {
   try {
 
-    console.log("request vernd")
-    const { name, brand, priceINR, priceAED, category } = req.body;
-    console.log(name, brand, priceINR, priceAED, category)
+    console.log("request vernd",req.body)
+    const { name, brand, priceINR, priceAED, categoryId,subCategoryId } = req.body;
 
     // Validate required fields
-    if (!name || !brand || !priceINR || !priceAED || !category) {
+    if (!name || !brand || !priceINR || !priceAED || !categoryId) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields"
@@ -52,7 +92,7 @@ export const addProduct = async (req, res) => {
     }
 
     // Validate category exists
-    const categoryExists = await categoryModel.findById(category);
+    const categoryExists = await categoryModel.findById(categoryId);
     if (!categoryExists) {
       return res.status(404).json({
         success: false,
@@ -87,7 +127,8 @@ export const addProduct = async (req, res) => {
       priceINR: Number(priceINR),
       priceAED: Number(priceAED),
       images,
-      category: category
+      subCategoryId,
+      categoryId
     };
 
     // Save to database
@@ -112,7 +153,7 @@ export const getProducts = async (req, res) => {
   try {
     const products = await productModel
       .find({ active: true })
-      .populate('category', 'name')
+      .populate('categoryId', 'name').populate('subCategoryId','name')
       .sort({ createdAt: -1 });
 
     if (!products.length) {
