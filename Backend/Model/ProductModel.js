@@ -35,6 +35,10 @@ const ProductSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true
+  },
+  trending:{
+    type:Boolean,
+    default:false
   }
 }, { timestamps: true });
 

@@ -8,7 +8,7 @@ import subcategoryModel from "../Model/SubCategoryModel.js";
 
 export const getProduct = async(req,res)=>{
     try {
-        const products = await productModel.find().populate('productTypeId', 'name')
+        const products = await productModel.find()
         .sort({ createdAt: -1 });
         if(products){
             res.status(200).json(products)

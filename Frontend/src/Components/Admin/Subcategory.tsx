@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2 } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -19,13 +19,11 @@ interface SubCategory extends Category {
   parentCategory?: Category;
 }
 
-
-
-
 interface CategoryFormData {
   name: string;
   image: File | null;
   categoryId: string;
+  currentImage?: string;
 }
 
 const SubCategory = () => {
@@ -39,6 +37,8 @@ const SubCategory = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentSubCategoryId, setCurrentSubCategoryId] = useState<string | null>(null);
 
   const api = axios.create({
     baseURL: baseurl,
@@ -68,23 +68,39 @@ const SubCategory = () => {
         formDataToSend.append('image', formData.image);
       }
 
-      const response = await api.post("/admin/add-subcategory", formDataToSend);
-
-      if (!response) {
-        throw new Error('Failed to create subcategory');
+      if (isEditing && currentSubCategoryId) {
+        formDataToSend.append('subCategoryId', currentSubCategoryId);
+        await api.put(`/admin/update-subcategory/${currentSubCategoryId}`, formDataToSend);
+      } else {
+        await api.post("/admin/add-subcategory", formDataToSend);
       }
 
-      await getSubCategories(); // Refresh subcategories after adding new one
+      await getSubCategories(); // Refresh subcategories after adding or updating
       handleCloseModal();
     } catch (error) {
-      console.error('Error creating subcategory:', error);
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} subcategory:`, error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEdit = (subCategory: SubCategory) => {
+    setIsEditing(true);
+    setCurrentSubCategoryId(subCategory._id);
+    setFormData({
+      name: subCategory.name,
+      image: null,
+      categoryId: subCategory.categoryId._id,
+      currentImage: subCategory.image
+    });
+    setImagePreview(subCategory.image);
+    setIsModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIsEditing(false);
+    setCurrentSubCategoryId(null);
     setFormData({ name: '', image: null, categoryId: '' });
     setImagePreview(null);
   };
@@ -103,8 +119,7 @@ const SubCategory = () => {
   const getSubCategories = async () => {
     try {
       const response = await api.get("/admin/get-subcategory");
-      console.log(response.data)
-
+      
       if (response.data && Array.isArray(response.data)) {
         setSubCategories(response.data);
       }
@@ -134,7 +149,13 @@ const SubCategory = () => {
           <div className="p-6 flex justify-between items-center border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-800">Sub-Categories</h2>
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setIsEditing(false);
+                setCurrentSubCategoryId(null);
+                setFormData({ name: '', image: null, categoryId: '' });
+                setImagePreview(null);
+                setIsModalOpen(true);
+              }}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               <PlusCircle size={20} />
@@ -151,6 +172,7 @@ const SubCategory = () => {
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Image</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Created At</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,6 +206,14 @@ const SubCategory = () => {
                         {subCategory.status || 'UNLISTED'}
                       </span>
                     </td>
+                    <td className="py-4 px-4">
+                      <button
+                        onClick={() => handleEdit(subCategory)}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -191,12 +221,14 @@ const SubCategory = () => {
           </div>
         </div>
 
-        {/* Add SubCategory Modal */}
+        {/* Add/Edit SubCategory Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl max-w-md w-full">
               <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800">Add New Sub-Category</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {isEditing ? 'Edit Sub-Category' : 'Add New Sub-Category'}
+                </h3>
                 <button
                   onClick={handleCloseModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -299,7 +331,8 @@ const SubCategory = () => {
                     disabled={isLoading}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {isLoading ? 'Creating...' : 'Create Sub-Category'}
+                    {isLoading ? (isEditing ? 'Updating...' : 'Creating...') : 
+                      (isEditing ? 'Update Sub-Category' : 'Create Sub-Category')}
                   </button>
                 </div>
               </form>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -19,15 +19,89 @@ interface CategoryFormData {
   image: File | null;
 }
 
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  return (
+    <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+      <div className="flex flex-1 justify-between sm:hidden">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm text-gray-700">
+            Showing page <span className="font-medium">{currentPage}</span> of{' '}
+            <span className="font-medium">{totalPages}</span>
+          </p>
+        </div>
+        <div>
+          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => onPageChange(index + 1)}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                  currentPage === index + 1
+                    ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                    : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CategoryPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     image: null,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const api = axios.create({
     baseURL: baseurl,
@@ -45,6 +119,17 @@ const CategoryPage = () => {
     }
   };
 
+  const handleEditClick = (category: Category) => {
+    setSelectedCategory(category);
+    setFormData({
+      name: category.name,
+      image: null,
+    });
+    setImagePreview(category.image);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -56,16 +141,17 @@ const CategoryPage = () => {
         formDataToSend.append('image', formData.image);
       }
 
-      const response = await api.post("/admin/add-category", formDataToSend);
-
-      if (!response) {
-        throw new Error('Failed to create category');
+      if (isEditMode && selectedCategory) {
+        formDataToSend.append('categoryId', selectedCategory._id);
+        await api.put("/admin/update-category", formDataToSend);
+      } else {
+        await api.post("/admin/add-category", formDataToSend);
       }
 
-      await getCategory(); // Refresh categories after adding new one
+      await getCategory();
       handleCloseModal();
     } catch (error) {
-      console.error('Error creating category:', error);
+      console.error('Error with category:', error);
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +159,8 @@ const CategoryPage = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIsEditMode(false);
+    setSelectedCategory(null);
     setFormData({ name: '', image: null });
     setImagePreview(null);
   };
@@ -90,7 +178,17 @@ const CategoryPage = () => {
 
   useEffect(() => {
     getCategory();
-  }, []); // Only run once on component mount
+  }, []);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCategories = categories.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
@@ -116,7 +214,7 @@ const CategoryPage = () => {
             </button>
           </div>
 
-          <div className="overflow-x-auto p-6">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="text-left border-b border-gray-100">
@@ -124,10 +222,11 @@ const CategoryPage = () => {
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Image</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Created At</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category) => (
+                {currentCategories.map((category) => (
                   <tr
                     key={category._id}
                     className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
@@ -154,19 +253,38 @@ const CategoryPage = () => {
                         {category.status || 'UNLISTED'}
                       </span>
                     </td>
+                    <td className="py-4 px-4">
+                      <button
+                        onClick={() => handleEditClick(category)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        <Edit2 size={20} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Component */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </div>
 
-        {/* Add Category Modal */}
+        {/* Add/Edit Category Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full">
               <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800">Add New Category</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {isEditMode ? 'Edit Category' : 'Add New Category'}
+                </h3>
                 <button
                   onClick={handleCloseModal}
                   className="text-gray-500 hover:text-gray-700"
@@ -250,7 +368,7 @@ const CategoryPage = () => {
                     disabled={isLoading}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {isLoading ? 'Creating...' : 'Create Category'}
+                    {isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Category' : 'Create Category')}
                   </button>
                 </div>
               </form>

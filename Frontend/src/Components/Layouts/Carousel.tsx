@@ -1,82 +1,70 @@
-import React, { useState, useEffect } from 'react'
-import watchsp from "../Layouts/Img/watchsp.jpg"
-import tshortsp from "../Layouts/Img/tshortsp.jpg"
-import shoesp from "../Layouts/Img/shoesp.jpeg"
-import glasssp from "../Layouts/Img/glasssp.jpeg"
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { baseurl } from '../../Constant/Base';
+
 interface Product {
-  id: number
-  category: string
-  name: string
-  price: number
-  image: string
+  _id: string;
+  name: string;
+  brand: string;
+  priceINR: number;
+  priceAED: number;
+  images: string[];
+  trending: boolean;
+  categoryId: string;
+  subCategoryId: string;
+  active: boolean;
 }
 
-const products: Product[] = [
-  {
-    id: 1,
-    category: "Sunglass",
-    name: "Police_55927_silver_blue",
-    price: 1000,
-    image: glasssp
-  },
-  {
-    id: 2,
-    category: "Shoes",
-    name: "Jordan Why Not ZER0 5 Bloodline",
-    price: 1750,
-    image: shoesp
-  },
-  {
-    id: 3,
-    category: "Watches",
-    name: "Fossi_l Fs2424 Multifort",
-    price: 2249,
-    image: watchsp
-  },
-  {
-    id: 4,
-    category: "Tshirts",
-    name: "Gucci_Maroon_Crochet",
-    price: 620,
-    image: tshortsp
-  },
-  {
-    id: 5,
-    category: "Sunglass",
-    name: "Police_55927_silver_blue",
-    price: 1000,
-    image: glasssp
-  },
-  {
-    id: 6,
-    category: "Shoes",
-    name: "Jordan Why Not ZER0 5 Bloodline",
-    price: 1750,
-    image: shoesp
-  }
-]
-
 export default function TrendingCarousel() {
-  const [position, setPosition] = useState(0)
-  const itemWidth = 25 // Each item takes 25% of container width
+  const [products, setProducts] = useState<Product[]>([]);
+  const [position, setPosition] = useState(0);
+  const itemWidth = 25;
+  const navigate = useNavigate();
+  const api = axios.create({
+    baseURL:baseurl
+  })
 
   useEffect(() => {
+    // Fetch products from your API
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get("/get-product");
+        const data = await response.data;
+        // Filter only trending products
+        const trendingProducts = data.filter((product: Product) => product.trending);
+        setProducts(trendingProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (products.length === 0) return;
+
     const interval = setInterval(() => {
       setPosition(prev => {
-        const newPosition = prev - itemWidth
-        // Reset position when all items have scrolled
+        const newPosition = prev - itemWidth;
         if (Math.abs(newPosition) >= (products.length * itemWidth)) {
-          return 0
+          return 0;
         }
-        return newPosition
-      })
-    }, 3000)
+        return newPosition;
+      });
+    }, 3000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, [products]);
 
-  // Create a duplicated array for infinite scroll effect
-  const displayProducts = [...products, ...products]
+  // Double the products array for infinite scroll effect
+  const displayProducts = [...products, ...products];
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
 
   return (
     <section className="w-full py-16 px-4 md:px-6 overflow-hidden">
@@ -95,34 +83,43 @@ export default function TrendingCarousel() {
           >
             {displayProducts.map((product, index) => (
               <div 
-                key={`${product.id}-${index}`} 
-                className="w-1/4 flex-shrink-0 px-4"
+                key={`${product._id}-${index}`} 
+                className="w-1/4 flex-shrink-0 px-4 cursor-pointer"
+                onClick={() => handleProductClick(product._id)}
               >
-                <div className="flex flex-col items-center">
-                  <div className="bg-gray-50 w-full aspect-square mb-4">
-                    <img
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      className="w-full h-full object-contain p-8"
-                    />
-                  </div>
-                  <div className="text-center space-y-1">
-                    <p className="text-sm text-gray-600">
-                      {product.category}
-                    </p>
-                    <h3 className="font-medium">
-                      {product.name}
-                    </h3>
-                    <p className="font-bold">
-                      ${product.price}
-                    </p>
-                  </div>
+            <div className="flex flex-col group cursor-pointer hover:shadow-lg transition-shadow duration-300 rounded-lg overflow-hidden bg-white">
+              <div className="relative w-full pt-[100%]"> 
+                {product.images && Object.values(product.images).length > 0 && (
+                  <img 
+                    src={Object.values(product.images)[0]} 
+                    alt={`${product.name} 1`}
+                    className="absolute top-0 left-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                )}
+              </div>
+              
+              <div className="p-4 bg-white">
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  {product.brand}
+                </p>
+                <h3 className="font-semibold text-gray-800 mb-2 truncate">
+                  {product.name}
+                </h3>
+                <div className="flex justify-center items-center space-x-2">
+                  <span className="text-lg font-bold text-gray-900">
+                    ₹{product.priceINR}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    / AED {product.priceAED}
+                  </span>
                 </div>
+              </div>
+            </div>
               </div>
             ))}
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

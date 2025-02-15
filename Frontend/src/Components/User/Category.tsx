@@ -1,12 +1,18 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { baseurl } from "../../Constant/Base";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { baseurl } from "../../Constant/Base";
+import NavBar from "../Layouts/Navbar";
+import Footer from "../Layouts/Footer";
+import { motion } from "framer-motion";
+import { Search, ChevronRight, ArrowRight } from "lucide-react";
 
 interface Category {
   name: string;
   image: string;
-  _id:string
+  _id: string;
+  description?: string;
+  itemCount?: number;
 }
 
 interface BannerSlide {
@@ -16,130 +22,192 @@ interface BannerSlide {
   accent: string;
 }
 
-
-
 const bannerSlides: BannerSlide[] = [
   {
-    title: "Exclusive Offers",
+    title: "Luxury Collection",
     image: "/images/banner1.jpg",
-    description: "Get the best deals on your favorite products.",
-    accent: "#FF5733",
+    description: "Discover our curated selection of premium attire",
+    accent: "#D4AF37",
   },
   {
-    title: "New Arrivals",
+    title: "Artisanal Craftsmanship",
     image: "/images/banner2.jpg",
-    description: "Check out our latest collections.",
-    accent: "#3498DB",
+    description: "Handcrafted with precision and care",
+    accent: "#B8860B",
   },
 ];
 
-
-
 const CategoryPages: React.FC = () => {
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  const [categories,setCategories] = useState<Category[]>([])
-  const navigate = useNavigate()
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
   const api = axios.create({
-    baseURL:baseurl
-  })
+    baseURL: baseurl
+  });
 
-
-  const getCategory = async()=>{
+  const getCategory = async () => {
     try {
-        const response = await api.get("/get-category")
-        console.log(response.data,"may here")
-        setCategories(response.data)
+      setIsLoading(true);
+      const response = await api.get("/get-category");
+      // Enhance the data with mock descriptions and item counts
+      const enhancedCategories = response.data.map((cat: Category) => ({
+        ...cat,
+        description: `Explore our exclusive ${cat.name.toLowerCase()} collection`,
+        itemCount: Math.floor(Math.random() * 50) + 20
+      }));
+      setCategories(enhancedCategories);
     } catch (error) {
-        
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-
-  const handlecategoryClick = (categoryId:string)=>{
-    navigate(`/category/${categoryId}`)
-
-  }
-
-  useEffect(()=>{
+  useEffect(() => {
     getCategory();
-  })
+  }, []);
 
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const displayedCategories = showAll ? filteredCategories : filteredCategories.slice(0, 4);
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setTimeout(() => {
+      navigate(`/category/${categoryId}`);
+    }, 300);
+  };
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-      {/* Title */}
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900">Select Category</h2>
-        <p className="mt-2 text-gray-600">Choose from our premium collection</p>
-      </div>
-
-      {/* Category Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {categories.map((category, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-lg shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
-          >
-            <div className="relative h-96" onClick={()=>handlecategoryClick(category._id)}>
-              <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/10 transition-opacity hover:opacity-0" />
-            </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-              <p className="text-sm text-gray-600">{category.name} Products</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* View More Button */}
-      <div className="flex justify-center mb-16">
-        <button className="group relative overflow-hidden bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-300">
-          <span className="relative z-10">View More Categories</span>
-          <div className="absolute inset-0 bg-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-        </button>
-      </div>
-
-      {/* Banner Section */}
-      <section className="container mx-auto px-4 py-12 md:py-16">
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-12 lg:space-x-16 relative">
-          {/* Banner Image */}
-          <div className="w-full md:w-1/2 relative h-[600px]">
-            <div className="overflow-hidden rounded-lg shadow-lg h-full">
-              {bannerSlides.map((slide, index) => (
-                <div
-                  key={index}
-                  className={`absolute inset-0 transition-opacity duration-1000 ${
-                    currentBannerIndex === index ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Banner Content */}
-          <div className="w-full md:w-1/2 mt-8 md:mt-0">
-            <div className="transition-all duration-500 transform">
-              <h2 className="text-3xl lg:text-4xl font-bold leading-tight mb-4">
-                <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
-                  {bannerSlides[currentBannerIndex].title}
-                </span>
-              </h2>
-              <p className="text-gray-600 mb-8 leading-relaxed">
-                {bannerSlides[currentBannerIndex].description}
-              </p>
-              <button
-                className="inline-flex items-center border-b-2 border-black pb-1 font-medium transition-all hover:border-[#8B4513] hover:text-[#8B4513]"
-                style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
-              >
-                VIEW MORE
-              </button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <NavBar />
+      
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative h-96 overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-black">
+          <img 
+            src="/images/luxury-banner.jpg" 
+            alt="Luxury Fashion"
+            className="w-full h-full object-cover opacity-70"
+          />
         </div>
-      </section>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+          <motion.h1 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-4xl md:text-6xl font-light mb-4"
+          >
+            ELEVATE YOUR LIFESTYLE
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-lg md:text-xl font-light max-w-2xl"
+          >
+   Discover a curated collection of fashion, home essentials, and kitchen accessories
+             </motion.p>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
+        {/* Search Bar */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white rounded-full shadow-xl p-4 mb-12 max-w-2xl mx-auto"
+        >
+          <div className="flex items-center">
+            <Search className="w-5 h-5 text-gray-400 mr-3" />
+            <input
+              type="text"
+              placeholder="Search categories..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-400"
+            />
+          </div>
+        </motion.div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {displayedCategories.map((category, index) => (
+            <motion.div
+              key={category._id}
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -10 }}
+              className={`bg-white rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 ${
+                selectedCategory === category._id ? 'scale-95 opacity-50' : ''
+              }`}
+            >
+              <div 
+                className="relative group cursor-pointer" 
+                onClick={() => handleCategoryClick(category._id)}
+              >
+                <div className="relative h-80">
+                  <img 
+                    src={category.image} 
+                    alt={category.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/80 to-transparent">
+                  <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
+                  <p className="text-sm opacity-90">{category.description}</p>
+                  <div className="mt-4 flex items-center text-sm">
+                    <span>{category.itemCount} Items</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* View More Button */}
+        {categories.length > 4 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="flex justify-center mb-20"
+          >
+            <button 
+              onClick={() => setShowAll(!showAll)}
+              className="group relative overflow-hidden rounded-full px-8 py-3 bg-black text-white hover:bg-gray-900 transition-colors duration-300"
+            >
+              <span className="relative z-10 flex items-center">
+                {showAll ? 'Show Less' : 'View More Collections'}
+                <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </div>
+
+      <Footer />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import FilterProduct from "../Components/User/FilterProduct";
 import LoginPage from "../Components/User/Login";
 import Subcategory from "../Components/User/SubCategory";
 import Types from "../Components/User/Types";
+import AboutPage from "../Components/Layouts/About";
 
 
 const User: React.FC = () => {
@@ -22,7 +23,7 @@ const User: React.FC = () => {
           <Route path="/category/:category" element={<Subcategory/>}/>
           <Route path="/product-type/:category" element={<Types/>}/>
           <Route path="/products/:category/:id" element={<FilterProduct/>}/>
-          <Route path="login" element={<LoginPage/>}/>
+          <Route path="/about" element={<AboutPage/>}/>
           </Routes>
       </>
     );

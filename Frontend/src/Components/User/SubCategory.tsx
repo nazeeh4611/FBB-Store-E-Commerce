@@ -1,42 +1,27 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { baseurl } from "../../Constant/Base";
+import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import Footer from "../Layouts/Footer";
+import { baseurl } from "../../Constant/Base";
 import NavBar from "../Layouts/Navbar";
+import Footer from "../Layouts/Footer";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Grid, Rows, ArrowRight } from "lucide-react";
 
 interface Category {
   name: string;
   image: string;
   _id: string;
+  description?: string;
+  itemCount?: number;
 }
-
-interface BannerSlide {
-  title: string;
-  image: string;
-  description: string;
-  accent: string;
-}
-
-const bannerSlides: BannerSlide[] = [
-  {
-    title: "Exclusive Offers",
-    image: "/images/banner1.jpg",
-    description: "Get the best deals on your favorite products.",
-    accent: "#FF5733",
-  },
-  {
-    title: "New Arrivals",
-    image: "/images/banner2.jpg",
-    description: "Check out our latest collections.",
-    accent: "#3498DB",
-  },
-];
 
 const Subcategory: React.FC = () => {
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewStyle, setViewStyle] = useState<"grid" | "rows">("grid");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [previewCategory, setPreviewCategory] = useState<Category | null>(null);
   const navigate = useNavigate();
   const { category } = useParams();
 
@@ -46,11 +31,15 @@ const Subcategory: React.FC = () => {
 
   const getCategory = async () => {
     if (!category) return;
-    
     setIsLoading(true);
     try {
       const response = await api.get(`/get-subcategory/${category}`);
-      setCategories(response.data);
+      const enhancedData = response.data.map((cat: Category) => ({
+        ...cat,
+        description: `Explore our curated selection of ${cat.name.toLowerCase()}`,
+        itemCount: Math.floor(Math.random() * 50) + 20
+      }));
+      setCategories(enhancedData);
     } catch (error) {
       console.error("Error fetching subcategories:", error);
     } finally {
@@ -58,75 +47,183 @@ const Subcategory: React.FC = () => {
     }
   };
 
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/products/${category}/${categoryId}`);
-  };
-
   useEffect(() => {
     getCategory();
-  }, [category]); // Add category as dependency to re-fetch when it changes
+  }, [category]);
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setTimeout(() => {
+      navigate(`/products/${category}/${categoryId}`);
+    }, 400);
+  };
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
-        <NavBar isTransparent={false} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-          {/* Title */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Select Category</h2>
-            <p className="mt-2 text-gray-600">Choose from our premium collection</p>
-          </div>
-
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            </div>
-          )}
-
-          {/* Category Cards */}
-          {!isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {categories.map((category) => (
-                <div
-                  key={category._id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <NavBar isTransparent={false} />
+      
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative h-64 overflow-hidden bg-black mt-16"
+      >
+        <motion.div 
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.5 }}
+          className="absolute inset-0"
+        >
+          <img 
+            src="/images/subcategory-banner.jpg" 
+            alt="Category Banner"
+            className="w-full h-full object-cover opacity-60"
+          />
+        </motion.div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+          <motion.h1 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-4xl md:text-5xl font-light mb-4"
+          >
+            Refined Collections
+          </motion.h1>
+          <motion.div 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-full max-w-xl mt-6"
+          >
+            <div className="relative flex items-center">
+              <Search className="absolute left-4 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search collections..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-14 py-4 rounded-full bg-white/90 backdrop-blur-sm text-black text-sm border-none focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <div className="absolute right-2 flex items-center gap-2">
+                <button 
+                  onClick={() => setViewStyle("grid")}
+                  className={`p-1.5 rounded-lg transition-colors ${viewStyle === "grid" ? "bg-black text-white" : "bg-gray-200 text-gray-600"}`}
                 >
-                  <div 
-                    className="relative h-96 cursor-pointer" 
-                    onClick={() => handleCategoryClick(category._id)}
-                  >
-                    {/* Image wrapper with background color while loading */}
-                    <div className="absolute inset-0 bg-gray-100">
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-full h-full object-cover transition-opacity duration-300"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-black/10 transition-opacity hover:opacity-0" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-                    <p className="text-sm text-gray-600">{category.name} Products</p>
-                  </div>
-                </div>
-              ))}
+                  <Grid className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setViewStyle("rows")}
+                  className={`p-1.5 rounded-lg transition-colors ${viewStyle === "rows" ? "bg-black text-white" : "bg-gray-200 text-gray-600"}`}
+                >
+                  <Rows className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* View More Button */}
-          <div className="flex justify-center mb-16">
-            <button className="group relative overflow-hidden bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-300">
-              <span className="relative z-10">View More Categories</span>
-              <div className="absolute inset-0 bg-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-            </button>
-          </div>
+          </motion.div>
         </div>
-        <Footer />
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Loading State */}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center items-center min-h-[400px]"
+            >
+              <div className="w-16 h-16 relative">
+                <div className="absolute inset-0 border-2 border-gray-200 rounded-full"></div>
+                <div className="absolute inset-0 border-2 border-black rounded-full animate-spin border-t-transparent"></div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Categories Grid/Rows */}
+        {!isLoading && (
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className={viewStyle === "grid" ? 
+              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16" : 
+              "space-y-6 mb-16"
+            }
+          >
+            {filteredCategories.map((category, index) => (
+              <motion.div
+                key={category._id}
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+                className={`bg-white rounded-xl overflow-hidden shadow-lg ${
+                  selectedCategory === category._id ? 'scale-95 opacity-50' : ''
+                }`}
+              >
+                <div 
+                  className="relative group cursor-pointer" 
+                  onClick={() => handleCategoryClick(category._id)}
+                  onMouseEnter={() => setPreviewCategory(category)}
+                  onMouseLeave={() => setPreviewCategory(null)}
+                >
+                  <div className={`relative ${viewStyle === "grid" ? "h-64" : "h-48"}`}>
+                    <img 
+                      src={category.image} 
+                      alt={category.name}
+                      className="w-full h-full object-contain bg-gray-50"
+                    />
+                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+                  </div>
+                  <motion.div 
+                    initial={false}
+                    animate={{ y: previewCategory?._id === category._id ? 0 : "100%" }}
+                    transition={{ type: "tween" }}
+                    className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm"
+                  >
+                    <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                    <p className="text-gray-600 text-sm mb-2">{category.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">{category.itemCount} Items</span>
+                      <ArrowRight className="w-4 h-4 text-black group-hover:translate-x-2 transition-transform" />
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredCategories.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <p className="text-xl text-gray-600">No collections found matching your search.</p>
+          </motion.div>
+        )}
       </div>
-    </>
+      <Footer />
+    </div>
   );
 };
 

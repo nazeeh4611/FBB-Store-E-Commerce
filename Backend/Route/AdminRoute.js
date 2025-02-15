@@ -1,13 +1,14 @@
 import express from "express";
-import { addCategory, getCategory, addProduct,getProducts,editProduct, addSubcategory, getSubCategory } from "../Controller/AdminController.js";
-const adminRouter = express.Router();
+import { addCategory, getCategory, addProduct, getProducts, addSubcategory, getSubCategory, updateTrending, updateProduct, SignUp, login, editCategory } from "../Controller/AdminController.js";
 import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-// Configure S3 Client
+const adminRouter = express.Router();
+
 const s3Client = new S3Client({
   region: "eu-north-1",
   credentials: {
@@ -16,7 +17,6 @@ const s3Client = new S3Client({
   },
 });
 
-// Configure multer for category uploads
 const categoryUpload = multer({
   storage: multerS3({
     s3: s3Client,
@@ -40,38 +40,56 @@ const productUpload = multer({
   }),
 });
 
-const handleProductImages = (req, res, next) => {
-  if (!req.files && !req.file && Object.keys(req.files || {}).length === 0) {
-    return next();
-  }
+const handleProductImages = async (req, res, next) => {
+  try {
+    const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
+    req.existingImages = existingImages;
 
-  const filesToUpload = [];
-  ['image1', 'image2', 'image3', 'image4'].forEach(fieldName => {
-    if (req.body[`update_${fieldName}`] === 'true') {
-      filesToUpload.push({ name: fieldName, maxCount: 1 });
+    const filesToUpload = [];
+
+    for (let i = 1; i <= 4; i++) {
+      const fieldName = `image${i}`;
+      if (req.files?.[fieldName] || !existingImages[i - 1]) {
+        filesToUpload.push({ name: fieldName, maxCount: 1 });
+      }
     }
-  });
 
-  // If there are files to upload, use multer
-  if (filesToUpload.length > 0) {
-    return productUpload.fields(filesToUpload)(req, res, next);
+    if (filesToUpload.length > 0) {
+      return productUpload.fields(filesToUpload)(req, res, (err) => {
+        if (err) {
+          console.error("Error uploading files:", err);
+          return res.status(400).json({ error: "Error uploading files" });
+        }
+        next();
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error in handleProductImages:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  next();
 };
 
-// Routes
 adminRouter.post("/add-category", categoryUpload.single('image'), addCategory);
 adminRouter.get("/get-category", getCategory);
 adminRouter.post("/add-subcategory", categoryUpload.single('image'), addSubcategory);
 adminRouter.get("/get-subcategory", getSubCategory);
+
 adminRouter.post("/add-product", productUpload.fields([
   { name: 'image1', maxCount: 1 },
   { name: 'image2', maxCount: 1 },
   { name: 'image3', maxCount: 1 },
   { name: 'image4', maxCount: 1 }
 ]), addProduct);
-adminRouter.patch("/edit-product/:id", handleProductImages, editProduct);
+
 adminRouter.get("/get-products", getProducts);
+adminRouter.put("/update-trending/:id", updateTrending);
+
+adminRouter.put("/edit-product/:id", handleProductImages, updateProduct);
+adminRouter.post("/register",SignUp)
+adminRouter.post("/login",login)
+adminRouter.put("/edit-category",categoryUpload.single('image'),editCategory)
+
 
 export default adminRouter;
