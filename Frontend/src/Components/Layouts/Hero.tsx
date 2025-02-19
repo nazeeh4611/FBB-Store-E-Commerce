@@ -124,6 +124,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     const handleScroll = () => {
       if (bannerRef.current) {
         const offset = window.scrollY;
+        // Modify just the y-transform without affecting other properties
         bannerRef.current.style.transform = `translateY(${offset * 0.1}px)`;
       }
     };
@@ -155,6 +156,9 @@ const Hero = ({ onShopNowClick = () => {} }) => {
       accent: "#34495E"
     }
   ];
+
+
+  
 
   // Auto-rotate banner slides
   useEffect(() => {
@@ -392,94 +396,94 @@ const Hero = ({ onShopNowClick = () => {} }) => {
 
         {/* Banner Section with fix for overlap issue */}
         <section className="container mx-auto px-4 py-12 mb-24 overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-12 lg:space-x-16 relative">
-            <div className="w-full md:w-1/2 relative h-[600px]">
-              <div className="overflow-hidden rounded-lg shadow-xl h-full border border-[#D4AF37]/10">
-                <AnimatePresence initial={false}>
-                  <motion.div
-                    key={currentBannerIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1, ease: "easeInOut" }}
-                    className="absolute inset-0"
-                    ref={bannerRef}
-                  >
-                    <img
-                      src={bannerSlides[currentBannerIndex].image}
-                      alt={bannerSlides[currentBannerIndex].title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
-                  </motion.div>
-                </AnimatePresence>
+  <div className="flex flex-col md:flex-row md:items-center md:space-x-12 lg:space-x-16 relative">
+    <div className="w-full md:w-1/2 h-[600px] relative"> {/* Fixed height container */}
+      <div className="absolute inset-0 overflow-hidden rounded-lg shadow-xl border border-[#D4AF37]/10">
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={currentBannerIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="relative w-full h-full"
+            ref={bannerRef}
+          >
+            <img
+              src={bannerSlides[currentBannerIndex].image}
+              alt={bannerSlides[currentBannerIndex].title}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: 'center center' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+          </motion.div>
+        </AnimatePresence>
                 
-                {/* Decorative corner elements */}
-                <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-[#D4AF37]/30 z-10"></div>
-                <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-[#D4AF37]/30 z-10"></div>
-                
-                {/* Banner navigation arrows */}
-                <button 
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-                  onClick={prevBannerSlide}
-                >
-                  <FiChevronLeft size={20} />
-                </button>
-                
-                <button 
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-                  onClick={nextBannerSlide}
-                >
-                  <FiChevronRight size={20} />
-                </button>
-              </div>
-            </div>
+        {/* Decorative corner elements */}
+        <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-[#D4AF37]/30 z-10"></div>
+        <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-[#D4AF37]/30 z-10"></div>
+        
+        {/* Banner navigation arrows */}
+        <button 
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
+          onClick={prevBannerSlide}
+        >
+          <FiChevronLeft size={20} />
+        </button>
+        
+        <button 
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
+          onClick={nextBannerSlide}
+        >
+          <FiChevronRight size={20} />
+        </button>
+      </div>
+    </div>
 
             <motion.div 
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="w-full md:w-1/2 mt-8 md:mt-0"
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentBannerIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white p-8 shadow-lg relative border-l-4"
-                  style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
-                >
-                  {/* Decorative element */}
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 -z-10"></div>
-                  
-                  <h2 className="text-3xl lg:text-4xl font-bold leading-tight mb-4 transition-colors duration-500">
-                    <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
-                      {bannerSlides[currentBannerIndex].title}
-                    </span>
-                  </h2>
-                  <div className="w-16 h-1 mb-6" style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}></div>
-                  <p className="text-gray-600 mb-8 leading-relaxed">
-                    {bannerSlides[currentBannerIndex].description}
-                  </p>
-                  <motion.button 
-                    whileHover={{ x: 5 }}
-                    className="inline-flex items-center border-b-2 pb-1 font-medium transition-all"
-                    style={{ 
-                      borderColor: bannerSlides[currentBannerIndex].accent,
-                      color: bannerSlides[currentBannerIndex].accent
-                    }}
-                  >
-                    VIEW MORE
-                    <FiArrowRight className="ml-2" />
-                  </motion.button>
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </section>
+      initial={{ opacity: 0, x: 30 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: true }}
+      className="w-full md:w-1/2 mt-8 md:mt-0"
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentBannerIndex}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-8 shadow-lg relative border-l-4"
+          style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
+        >
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 -z-10"></div>
+          
+          <h2 className="text-3xl lg:text-4xl font-bold leading-tight mb-4 transition-colors duration-500">
+            <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
+              {bannerSlides[currentBannerIndex].title}
+            </span>
+          </h2>
+          <div className="w-16 h-1 mb-6" style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}></div>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            {bannerSlides[currentBannerIndex].description}
+          </p>
+          <motion.button 
+            whileHover={{ x: 5 }}
+            className="inline-flex items-center border-b-2 pb-1 font-medium transition-all"
+            style={{ 
+              borderColor: bannerSlides[currentBannerIndex].accent,
+              color: bannerSlides[currentBannerIndex].accent
+            }}
+          >
+            VIEW MORE
+            <FiArrowRight className="ml-2" />
+          </motion.button>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
+  </div>
+</section>
       </div>
 
       {/* New Arrivals Section - with proper spacing to fix overlap */}

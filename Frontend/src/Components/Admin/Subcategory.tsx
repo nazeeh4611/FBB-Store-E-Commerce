@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload, Edit2 } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -29,6 +29,7 @@ interface CategoryFormData {
 const SubCategory = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
@@ -39,6 +40,12 @@ const SubCategory = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentSubCategoryId, setCurrentSubCategoryId] = useState<string | null>(null);
+  
+  // Search and pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   const api = axios.create({
     baseURL: baseurl,
@@ -122,9 +129,56 @@ const SubCategory = () => {
       
       if (response.data && Array.isArray(response.data)) {
         setSubCategories(response.data);
+        setFilteredSubCategories(response.data);
+        updatePagination(response.data);
       }
     } catch (error) {
       console.error('Error fetching subcategories:', error);
+    }
+  };
+
+  // Handle search input change
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    
+    if (term.trim() === '') {
+      setFilteredSubCategories(subCategories);
+    } else {
+      const results = subCategories.filter(
+        item => 
+          item.name.toLowerCase().includes(term.toLowerCase()) ||
+          (item.categoryId?.name?.toLowerCase().includes(term.toLowerCase()))
+      );
+      setFilteredSubCategories(results);
+    }
+    
+    setCurrentPage(1); // Reset to first page on new search
+    updatePagination(term.trim() === '' ? subCategories : filteredSubCategories);
+  };
+
+  // Update pagination based on filtered results
+  const updatePagination = (items: SubCategory[]) => {
+    setTotalPages(Math.ceil(items.length / itemsPerPage));
+  };
+
+  // Get current items for the current page
+  const getCurrentItems = () => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredSubCategories.slice(indexOfFirstItem, indexOfLastItem);
+  };
+
+  // Pagination controls
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -132,6 +186,10 @@ const SubCategory = () => {
     getCategories();
     getSubCategories();
   }, []); // Only run once on component mount
+
+  useEffect(() => {
+    updatePagination(filteredSubCategories);
+  }, [filteredSubCategories, itemsPerPage]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
@@ -146,8 +204,23 @@ const SubCategory = () => {
         </header>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 flex justify-between items-center border-b border-gray-100">
+          <div className="p-6 flex flex-col md:flex-row md:justify-between md:items-center border-b border-gray-100 gap-4">
             <h2 className="text-xl font-semibold text-gray-800">Sub-Categories</h2>
+            
+            {/* Search Box */}
+            <div className="relative w-full md:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search subcategories..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
             <button 
               onClick={() => {
                 setIsEditing(false);
@@ -156,7 +229,7 @@ const SubCategory = () => {
                 setImagePreview(null);
                 setIsModalOpen(true);
               }}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap"
             >
               <PlusCircle size={20} />
               <span>Add Sub-Category</span>
@@ -176,7 +249,7 @@ const SubCategory = () => {
                 </tr>
               </thead>
               <tbody>
-                {subCategories.map((subCategory) => (
+                {getCurrentItems().map((subCategory) => (
                   <tr
                     key={subCategory._id}
                     className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
@@ -218,6 +291,52 @@ const SubCategory = () => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Showing {filteredSubCategories.length > 0 
+                  ? `${((currentPage - 1) * itemsPerPage) + 1} to ${Math.min(currentPage * itemsPerPage, filteredSubCategories.length)}` 
+                  : '0'} of {filteredSubCategories.length} subcategories
+              </p>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className={`p-2 rounded-md ${
+                    currentPage === 1 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
+                
+                <button
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className={`p-2 rounded-md ${
+                    currentPage === totalPages || totalPages === 0
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            
+            {/* No Results Message */}
+            {filteredSubCategories.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No subcategories found.</p>
+              </div>
+            )}
           </div>
         </div>
 
