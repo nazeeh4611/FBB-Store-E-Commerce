@@ -1,1 +1,1 @@
-export const baseurl = "http://flybuybrand.com//api"
+export const baseurl = "http://www.flybuybrand.com/api"
