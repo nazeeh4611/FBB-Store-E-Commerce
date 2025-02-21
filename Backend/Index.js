@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors({
-    origin: 'http://flybuybrand.com:3000',
+    origin: 'http://www.flybuybrand.com:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
