@@ -1,4 +1,3 @@
-import React from 'react';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Footer from './Footer';
 import NavBar from './Navbar';

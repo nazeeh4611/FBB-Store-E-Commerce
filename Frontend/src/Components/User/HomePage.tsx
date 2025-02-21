@@ -1,8 +1,8 @@
-import React from 'react';
+// import React from 'react';
 import Hero from '../Layouts/Hero';
 import NavBar from '../Layouts/Navbar';
 import Footer from '../Layouts/Footer';
-import Shop from './Shop';
+// import Shop from './Shop';
 
 function Homepage() {
   return (

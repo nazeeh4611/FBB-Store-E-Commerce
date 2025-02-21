@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import  { useState, useEffect, useRef } from "react";
 import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -7,9 +7,7 @@ import { RiStarFill } from "react-icons/ri";
 // Import images
 import Hero1 from "../Layouts/Img/Hero1.jpg";
 import Hero2 from "../Layouts/Img/Hero2.jpg";
-import watch from "../Layouts/Img/watch.jpeg";
 import shoe from "../Layouts/Img/shoe.jpeg";
-import tshirt from "../Layouts/Img/tshirt.jpeg";
 import glass from "../Layouts/Img/glass.jpeg";
 import banner1 from "../Layouts/Img/banner1.jpg";
 import slider1 from "../Layouts/Img/slider1.jpg";

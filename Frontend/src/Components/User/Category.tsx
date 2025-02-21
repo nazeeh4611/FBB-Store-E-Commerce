@@ -15,34 +15,34 @@ interface Category {
   itemCount?: number;
 }
 
-interface BannerSlide {
-  title: string;
-  image: string;
-  description: string;
-  accent: string;
-}
+// interface BannerSlide {
+//   title: string;
+//   image: string;
+//   description: string;
+//   accent: string;
+// }
 
-const bannerSlides: BannerSlide[] = [
-  {
-    title: "Luxury Collection",
-    image: "/images/banner1.jpg",
-    description: "Discover our curated selection of premium attire",
-    accent: "#D4AF37",
-  },
-  {
-    title: "Artisanal Craftsmanship",
-    image: "/images/banner2.jpg",
-    description: "Handcrafted with precision and care",
-    accent: "#B8860B",
-  },
-];
+// const bannerSlides: BannerSlide[] = [
+//   {
+//     title: "Luxury Collection",
+//     image: "/images/banner1.jpg",
+//     description: "Discover our curated selection of premium attire",
+//     accent: "#D4AF37",
+//   },
+//   {
+//     title: "Artisanal Craftsmanship",
+//     image: "/images/banner2.jpg",
+//     description: "Handcrafted with precision and care",
+//     accent: "#B8860B",
+//   },
+// ];
 
 const CategoryPages: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const api = axios.create({
@@ -51,7 +51,7 @@ const CategoryPages: React.FC = () => {
 
   const getCategory = async () => {
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       const response = await api.get("/get-category");
       // Enhance the data with mock descriptions and item counts
       const enhancedCategories = response.data.map((cat: Category) => ({
@@ -63,7 +63,7 @@ const CategoryPages: React.FC = () => {
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 

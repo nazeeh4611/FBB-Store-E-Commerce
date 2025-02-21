@@ -169,7 +169,7 @@ const Subcategory: React.FC = () => {
               "space-y-6 mb-16"
             }
           >
-            {filteredCategories.map((category, index) => (
+            {filteredCategories.map((category) => (
               <motion.div
                 key={category._id}
                 variants={itemVariants}

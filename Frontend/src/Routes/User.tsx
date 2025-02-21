@@ -5,7 +5,6 @@ import Shop from "../Components/User/Shop";
 import ProductPage from "../Components/User/ProductDetail";
 import CategoryPages from "../Components/User/Category";
 import FilterProduct from "../Components/User/FilterProduct";
-import LoginPage from "../Components/User/Login";
 import Subcategory from "../Components/User/SubCategory";
 import Types from "../Components/User/Types";
 import AboutPage from "../Components/Layouts/About";

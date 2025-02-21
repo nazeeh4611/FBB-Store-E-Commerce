@@ -36,7 +36,7 @@ const bannerSlides: BannerSlide[] = [
 
 
 const Types : React.FC = () => {
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [currentBannerIndex] = useState(0);
   const [categories,setCategories] = useState<Category[]>([])
   const navigate = useNavigate()
   const api = axios.create({
