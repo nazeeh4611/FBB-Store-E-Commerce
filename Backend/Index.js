@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors({
-    origin: 'http://www.flybuybrand.com:3000',
+    origin: 'http://www.flybuybrand.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -45,4 +45,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/build', 'index.html'));
 });
 
-app.listen(3000, '0.0.0.0', () => console.log('Server is running at http://0.0.0.0:3000'));
+app.listen(PORT, () => console.log('Server is running at http://0.0.0.0:3000'));
