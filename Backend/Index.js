@@ -19,12 +19,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
-app.use(cors({
-    origin: 'http://www.flybuybrand.com',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
-    credentials: true
-}));
+// app.use(cors({
+//     origin: 'http://www.flybuybrand.com',
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type'],
+//     credentials: true
+// }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
