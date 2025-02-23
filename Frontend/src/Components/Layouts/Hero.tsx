@@ -11,6 +11,7 @@ import shoe from "../Layouts/Img/shoe.jpeg";
 import glass from "../Layouts/Img/glass.jpeg";
 import banner1 from "../Layouts/Img/banner1.jpg";
 import slider1 from "../Layouts/Img/slider1.jpg";
+import slider12 from "../Layouts/Img/slider1 2.jpeg";
 import TrendingCarousel from "./Carousel";
 import axios from "axios";
 import { baseurl } from "../../Constant/Base";
@@ -28,6 +29,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isHovering, setIsHovering] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const [showWelcome, setShowWelcome] = useState(true);
 
@@ -36,10 +38,22 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   const api = axios.create({
     baseURL: baseurl
   });
+
+  // Check for mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const heroSlides = [
     {
-      image: slider1,
+      image: isMobile ? slider12 : slider1,
       heading: "Elevate Your Style",
       subheading: "Discover the latest fashion trends"
     },
@@ -105,7 +119,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
 
   const getProducts = async() => {
     try {
-      const response = await api.get("/get-product");
+      const response = await api.get("/ ");
       console.log(response.data, "may here");
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -122,7 +136,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     const handleScroll = () => {
       if (bannerRef.current) {
         const offset = window.scrollY;
-        // Modify just the y-transform without affecting other properties
         bannerRef.current.style.transform = `translateY(${offset * 0.1}px)`;
       }
     };
@@ -154,9 +167,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
       accent: "#34495E"
     }
   ];
-
-
-  
 
   // Auto-rotate banner slides
   useEffect(() => {
@@ -203,7 +213,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               exit={{ scale: 1.2, opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h1 className="text-white text-6xl font-light tracking-widest">
+              <h1 className="text-white text-3xl md:text-6xl font-light tracking-widest">
                 WELCOME TO <span className="font-bold">LUXURY</span>
               </h1>
             </motion.div>
@@ -217,7 +227,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
 
       {/* Hero Section with Slider */}
       <div 
-        className="relative w-full h-[500px] sm:h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden group"
+        className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[800px] overflow-hidden group"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -244,27 +254,27 @@ const Hero = ({ onShopNowClick = () => {} }) => {
 
         {/* Navigation arrows */}
         <button 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100"
+          className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:bg-white/30 z-10"
           onClick={prevSlide}
         >
-          <FiChevronLeft size={24} />
+          <FiChevronLeft size={20} />
         </button>
         
         <button 
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100"
+          className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:bg-white/30 z-10"
           onClick={nextSlide}
         >
-          <FiChevronRight size={24} />
+          <FiChevronRight size={20} />
         </button>
 
         {/* Slide indicators */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <div className="absolute bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlideIndex(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                currentSlideIndex === index ? "w-8 bg-[#D4AF37]" : "w-2 bg-white/50 hover:bg-white/80"
+              className={`h-1.5 md:h-2 rounded-full transition-all duration-300 ${
+                currentSlideIndex === index ? "w-6 md:w-8 bg-[#D4AF37]" : "w-1.5 md:w-2 bg-white/50 hover:bg-white/80"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -272,11 +282,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </div>
 
         {/* Decorative corner elements */}
-        <div className="absolute top-8 left-8 w-16 h-16 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
-        <div className="absolute top-8 right-8 w-16 h-16 border-r-2 border-t-2 border-[#D4AF37]/30"></div>
-        <div className="absolute bottom-8 left-8 w-16 h-16 border-l-2 border-b-2 border-[#D4AF37]/30"></div>
-        <div className="absolute bottom-8 right-8 w-16 h-16 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
+        <div className="absolute top-4 md:top-8 left-4 md:left-8 w-12 md:w-16 h-12 md:h-16 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
+        <div className="absolute top-4 md:top-8 right-4 md:right-8 w-12 md:w-16 h-12 md:h-16 border-r-2 border-t-2 border-[#D4AF37]/30"></div>
+        <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 w-12 md:w-16 h-12 md:h-16 border-l-2 border-b-2 border-[#D4AF37]/30"></div>
+        <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 w-12 md:w-16 h-12 md:h-16 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
 
+        {/* Content section */}
         <div className="relative h-full flex items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -286,12 +297,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           >
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: "80px" }}
+              animate={{ width: "60px" }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="h-px bg-[#D4AF37] mb-6"
+              className="h-px bg-[#D4AF37] mb-4 md:mb-6"
             ></motion.div>
             
-            <h1 className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 min-h-[80px]">
+            <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-6 min-h-[60px] md:min-h-[80px]">
               <span>{text}</span>
               <Cursor cursorColor='#D4AF37' />
             </h1>
@@ -300,7 +311,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onShopNowClick}
-              className="bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-black px-8 py-3 rounded-full transition-all duration-300 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4AF37] group border border-white/20 hover:border-[#D4AF37]"
+              className="bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 rounded-full transition-all duration-300 text-base md:text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4AF37] group border border-white/20 hover:border-[#D4AF37]"
             >
               <span className="flex items-center">
                 Shop Now
@@ -312,29 +323,29 @@ const Hero = ({ onShopNowClick = () => {} }) => {
       </div>
 
       {/* Categories Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 md:mt-16 mb-12 md:mb-24">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true, margin: "-100px" }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
-          <h2 className="text-3xl font-bold text-gray-900">Select Category</h2>
-          <div className="w-24 h-1 bg-[#D4AF37] mx-auto mt-4 mb-4"></div>
-          <p className="mt-2 text-gray-600">Choose from our premium collection</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Select Category</h2>
+          <div className="w-16 md:w-24 h-1 bg-[#D4AF37] mx-auto mt-3 md:mt-4 mb-3 md:mb-4"></div>
+          <p className="mt-2 text-sm md:text-base text-gray-600">Choose from our premium collection</p>
         </motion.div>
 
         {loadingCategories ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             {[...Array(4)].map((_, index) => (
-              <div key={index} className="bg-gray-100 rounded-lg shadow-lg overflow-hidden h-96 animate-pulse">
+              <div key={index} className="bg-gray-100 rounded-lg shadow-lg overflow-hidden h-64 md:h-96 animate-pulse">
                 <div className="h-full w-full bg-gray-200"></div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             {displayCategories.map((category, index) => (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -345,7 +356,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
                 className="bg-white rounded-lg shadow-lg overflow-hidden group"
               >
                 <div 
-                  className="relative h-96 cursor-pointer" 
+                  className="relative h-64 md:h-96 cursor-pointer" 
                   onClick={() => handleCategoryClick(category._id)}
                 >
                   <img
@@ -356,19 +367,18 @@ const Hero = ({ onShopNowClick = () => {} }) => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
                   
                   {/* Embellishment */}
-                  <div className="absolute top-4 right-4 w-10 h-10 border-2 border-[#D4AF37]/40 rounded-full flex items-center justify-center">
-                    <RiStarFill className="text-[#D4AF37]/70 text-sm" />
+                  <div className="absolute top-4 right-4 w-8 md:w-10 h-8 md:h-10 border-2 border-[#D4AF37]/40 rounded-full flex items-center justify-center">
+                    <RiStarFill className="text-[#D4AF37]/70 text-xs md:text-sm" />
                   </div>
                   
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="bg-black/80 text-white px-6 py-2 rounded-sm font-medium transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 border-b border-[#D4AF37]">
+                    <span className="bg-black/80 text-white px-4 md:px-6 py-2 rounded-sm font-medium transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 border-b border-[#D4AF37] text-sm md:text-base">
                       View Collection
                     </span>
                   </div>
                   
-                  {/* Category name overlay at bottom */}
-                  <div className="absolute bottom-6 left-0 right-0 text-center">
-                    <h3 className="text-xl font-semibold text-white px-4 py-2 bg-black/50 backdrop-blur-sm inline-block">
+                  <div className="absolute bottom-4 md:bottom-6 left-0 right-0 text-center">
+                    <h3 className="text-lg md:text-xl font-semibold text-white px-3 md:px-4 py-1.5 md:py-2 bg-black/50 backdrop-blur-sm inline-block">
                       {category.name}
                     </h3>
                   </div>
@@ -378,12 +388,13 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           </div>
         )}
 
-        <div className="flex justify-center mb-16">
+        <div className="flex justify-center mb-8 md:mb-16">
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="group relative overflow-hidden bg-black text-white px-8 py-3 rounded-sm transition-all duration-300 border border-transparent hover:border-[#D4AF37]"
-            onClick={handleClick}>
+            className="group relative overflow-hidden bg-black text-white px-6 md:px-8 py-2 md:py-3 rounded-sm transition-all duration-300 border border-transparent hover:border-[#D4AF37] text-sm md:text-base"
+            onClick={handleClick}
+          >
             <span className="relative z-10 flex items-center">
               View More Categories
               <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
@@ -392,100 +403,100 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           </motion.button>
         </div>
 
-        {/* Banner Section with fix for overlap issue */}
-        <section className="container mx-auto px-4 py-12 mb-24 overflow-hidden">
-  <div className="flex flex-col md:flex-row md:items-center md:space-x-12 lg:space-x-16 relative">
-    <div className="w-full md:w-1/2 h-[600px] relative"> {/* Fixed height container */}
-      <div className="absolute inset-0 overflow-hidden rounded-lg shadow-xl border border-[#D4AF37]/10">
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={currentBannerIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-            className="relative w-full h-full"
-            ref={bannerRef}
-          >
-            <img
-              src={bannerSlides[currentBannerIndex].image}
-              alt={bannerSlides[currentBannerIndex].title}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ objectPosition: 'center center' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
-          </motion.div>
-        </AnimatePresence>
+        {/* Banner Section */}
+        <section className="container mx-auto px-4 py-8 md:py-12 mb-12 md:mb-24 overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-8 lg:space-x-16 relative">
+            <div className="w-full md:w-1/2 h-[400px] md:h-[600px] relative">
+              <div className="absolute inset-0 overflow-hidden rounded-lg shadow-xl border border-[#D4AF37]/10">
+                <AnimatePresence initial={false}>
+                  <motion.div
+                    key={currentBannerIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1, ease: "easeInOut" }}
+                    className="relative w-full h-full"
+                    ref={bannerRef}
+                  >
+                    <img
+                      src={bannerSlides[currentBannerIndex].image}
+                      alt={bannerSlides[currentBannerIndex].title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ objectPosition: 'center center' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+                  </motion.div>
+                </AnimatePresence>
                 
-        {/* Decorative corner elements */}
-        <div className="absolute top-4 left-4 w-12 h-12 border-l-2 border-t-2 border-[#D4AF37]/30 z-10"></div>
-        <div className="absolute bottom-4 right-4 w-12 h-12 border-r-2 border-b-2 border-[#D4AF37]/30 z-10"></div>
-        
-        {/* Banner navigation arrows */}
-        <button 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-          onClick={prevBannerSlide}
-        >
-          <FiChevronLeft size={20} />
-        </button>
-        
-        <button 
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-          onClick={nextBannerSlide}
-        >
-          <FiChevronRight size={20} />
-        </button>
-      </div>
-    </div>
+                {/* Decorative corner elements */}
+                <div className="absolute top-4 left-4 w-8 md:w-12 h-8 md:h-12 border-l-2 border-t-2 border-[#D4AF37]/30 z-10"></div>
+                <div className="absolute bottom-4 right-4 w-8 md:w-12 h-8 md:h-12 border-r-2 border-b-2 border-[#D4AF37]/30 z-10"></div>
+                
+                {/* Banner navigation arrows */}
+                <button 
+                  className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
+                  onClick={prevBannerSlide}
+                >
+                  <FiChevronLeft size={16} className="md:w-5 md:h-5" />
+                </button>
+                
+                <button 
+                  className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
+                  onClick={nextBannerSlide}
+                >
+                  <FiChevronRight size={16} className="md:w-5 md:h-5" />
+                </button>
+              </div>
+            </div>
 
             <motion.div 
-      initial={{ opacity: 0, x: 30 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true }}
-      className="w-full md:w-1/2 mt-8 md:mt-0"
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentBannerIndex}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white p-8 shadow-lg relative border-l-4"
-          style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
-        >
-          <div className="absolute top-0 right-0 w-16 h-16 bg-[#D4AF37]/5 -z-10"></div>
-          
-          <h2 className="text-3xl lg:text-4xl font-bold leading-tight mb-4 transition-colors duration-500">
-            <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
-              {bannerSlides[currentBannerIndex].title}
-            </span>
-          </h2>
-          <div className="w-16 h-1 mb-6" style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}></div>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            {bannerSlides[currentBannerIndex].description}
-          </p>
-          <motion.button 
-            whileHover={{ x: 5 }}
-            className="inline-flex items-center border-b-2 pb-1 font-medium transition-all"
-            style={{ 
-              borderColor: bannerSlides[currentBannerIndex].accent,
-              color: bannerSlides[currentBannerIndex].accent
-            }}
-          >
-            VIEW MORE
-            <FiArrowRight className="ml-2" />
-          </motion.button>
-        </motion.div>
-      </AnimatePresence>
-    </motion.div>
-  </div>
-</section>
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="w-full md:w-1/2 mt-6 md:mt-0"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentBannerIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white p-6 md:p-8 shadow-lg relative border-l-4"
+                  style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
+                >
+                  <div className="absolute top-0 right-0 w-12 md:w-16 h-12 md:h-16 bg-[#D4AF37]/5 -z-10"></div>
+                  
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-3 md:mb-4 transition-colors duration-500">
+                    <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
+                      {bannerSlides[currentBannerIndex].title}
+                    </span>
+                  </h2>
+                  <div className="w-12 md:w-16 h-1 mb-4 md:mb-6" style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}></div>
+                  <p className="text-gray-600 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
+                    {bannerSlides[currentBannerIndex].description}
+                  </p>
+                  <motion.button 
+                    whileHover={{ x: 5 }}
+                    className="inline-flex items-center border-b-2 pb-1 font-medium transition-all text-sm md:text-base"
+                    style={{ 
+                      borderColor: bannerSlides[currentBannerIndex].accent,
+                      color: bannerSlides[currentBannerIndex].accent
+                    }}
+                  >
+                    VIEW MORE
+                    <FiArrowRight className="ml-2" />
+                  </motion.button>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        </section>
       </div>
 
-      {/* New Arrivals Section - with proper spacing to fix overlap */}
-      <div className="relative h-[600px] w-full overflow-hidden mb-16 group">
+      {/* New Arrivals Section */}
+      <div className="relative h-[400px] md:h-[600px] w-full overflow-hidden mb-8 md:mb-16 group">
         <motion.div 
           initial={{ scale: 1.1 }}
           whileInView={{ scale: 1 }}
@@ -507,7 +518,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-7xl font-bold mb-8 relative"
+            className="text-3xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8 relative"
           >
             <span className="tracking-widest">NEW ARRIVALS</span>
             <motion.div 
@@ -515,7 +526,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               whileInView={{ width: '100%' }}
               transition={{ duration: 0.7, delay: 0.5 }}
               viewport={{ once: true }}
-              className="absolute -bottom-4 left-0 h-1 bg-[#D4AF37]"
+              className="absolute -bottom-3 md:-bottom-4 left-0 h-0.5 md:h-1 bg-[#D4AF37]"
             />
           </motion.h2>
           <motion.button
@@ -526,7 +537,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onShopNowClick}
-            className="bg-transparent text-white hover:bg-white hover:text-black px-8 py-3 border border-white hover:border-[#D4AF37] rounded-sm transition-all duration-300 text-lg font-medium group"
+            className="bg-transparent text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 border border-white hover:border-[#D4AF37] rounded-sm transition-all duration-300 text-sm md:text-lg font-medium group"
           >
             <span className="flex items-center">
               SHOP NOW
@@ -536,14 +547,14 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </div>
         
         {/* Decorative elements */}
-        <div className="absolute top-8 left-8 md:left-16 w-20 h-20 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
-        <div className="absolute bottom-8 right-8 md:right-16 w-20 h-20 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
+        <div className="absolute top-4 md:top-8 left-4 md:left-16 w-12 md:w-20 h-12 md:h-20 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
+        <div className="absolute bottom-4 md:bottom-8 right-4 md:right-16 w-12 md:w-20 h-12 md:h-20 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
       </div>
       
       <TrendingCarousel />
       
       {/* Floating badge */}
-      <div className="fixed bottom-6 right-6 z-40 hidden md:flex items-center justify-center">
+      <div className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -556,10 +567,10 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             }
           }}
           whileHover={{ scale: 1.05 }}
-          className="w-16 h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
+          className="w-12 md:w-16 h-12 md:h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
         >
-          <div className="w-14 h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
-            <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform" />
+          <div className="w-10 md:w-14 h-10 md:h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
+            <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform text-sm md:text-base" />
           </div>
         </motion.div>
       </div>
