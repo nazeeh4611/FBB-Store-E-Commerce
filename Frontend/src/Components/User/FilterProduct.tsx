@@ -8,6 +8,23 @@ import { baseurl } from "../../Constant/Base"
 import axios from "axios"
 import { motion } from "framer-motion"
 
+interface CategoryId {
+  _id: string;
+  name: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SubCategoryId {
+  _id: string;
+  name: string;
+  categoryId: string;
+  image: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Category {
   _id: string;
   name: string;
@@ -18,7 +35,8 @@ interface Product {
   _id: string;
   name: string;
   brand: string;
-  category: Category | string;
+  categoryId: CategoryId;
+  subCategoryId: SubCategoryId;
   priceINR: number;
   priceAED: number;
   images: {
@@ -62,13 +80,15 @@ export default function FilterProduct() {
   const [isLoading, setIsLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [activeImageIndex, setActiveImageIndex] = useState<{ [key: string]: number }>({})
+  const [currentCategory, setCurrentCategory] = useState<string>("")
+  const [currentSubCategory, setCurrentSubCategory] = useState<string>("")
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 50000],
     brands: [],
     sortBy: 'newest'
   })
   const {category, id} = useParams()
-  
+
   useEffect(() => {
     const savedFavorites = localStorage.getItem('favorites')
     if (savedFavorites) {
@@ -79,6 +99,18 @@ export default function FilterProduct() {
   useEffect(() => {
     localStorage.setItem('favorites', JSON.stringify(favorites))
   }, [favorites])
+
+  useEffect(() => {
+    if (filteredProducts.length > 0) {
+      const product = filteredProducts[0]
+      if (product.categoryId && typeof product.categoryId === 'object') {
+        setCurrentCategory(product.categoryId.name)
+      }
+      if (product.subCategoryId && typeof product.subCategoryId === 'object') {
+        setCurrentSubCategory(product.subCategoryId.name)
+      }
+    }
+  }, [filteredProducts])
 
   const toggleFavorite = (productName: string, event: React.MouseEvent) => {
     event.stopPropagation()
@@ -277,12 +309,25 @@ export default function FilterProduct() {
                 Shop
               </Link>
             </li>
-            {category && (
+            {currentCategory && (
+              <>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <li>
+                  <Link 
+                    to={`/category/${currentCategory.toLowerCase()}`} 
+                    className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    {currentCategory}
+                  </Link>
+                </li>
+              </>
+            )}
+            {currentSubCategory && (
               <>
                 <ChevronRight className="h-4 w-4 text-gray-400" />
                 <li>
                   <span className="text-sm font-medium text-gray-900">
-                    {category}
+                    {currentSubCategory}
                   </span>
                 </li>
               </>
@@ -349,243 +394,236 @@ export default function FilterProduct() {
                   className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price-low-high">Price: Low to High</option>
-                  <option value="price-high-low">Price: High to Low</option>
-                  <option value="rating">Customer Rating</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">View:</span>
-                {[2, 3, 4].map((num) => (
-                  <button 
-                    key={num} 
-                    className={`px-2 text-sm font-medium transition-colors ${
-                      productsPerRow === num 
-                        ? 'text-indigo-600 underline' 
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                    onClick={() => handleViewChange(num)}
                   >
-                    {num}
-                  </button>
-                ))}
-              </div>
-              
-              <button
-                className="hidden items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 lg:flex"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-                </button>
-            </div>
-          </div>
-          
-          <div className="flex flex-col lg:flex-row">
-            {showFilters && (
-              <div className="mb-8 w-full shrink-0 pr-0 lg:mb-0 lg:w-64 lg:pr-8">
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Filters</h3>
-                  
-                  <div className="mb-6">
-                    <h4 className="mb-2 text-sm font-medium text-gray-700">Price Range</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">₹{filters.priceRange[0]}</span>
-                      <span className="text-sm text-gray-600">₹{filters.priceRange[1]}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={minPrice || 0}
-                      max={maxPrice || 50000}
-                      value={filters.priceRange[1]}
-                      onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
-                      className="mt-2 w-full"
-                    />
-                  </div>
-                  
-                  {uniqueBrands.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="mb-2 text-sm font-medium text-gray-700">Brands</h4>
-                      <div className="space-y-2">
-                        {uniqueBrands.map((brand) => (
-                          <label key={brand} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={filters.brands.includes(brand)}
-                              onChange={() => toggleFilterValue('brands', brand)}
-                              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-600">{brand}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <button
-                    onClick={() => setFilters({
-                      priceRange: [minPrice || 0, maxPrice || 50000],
-                      brands: [],
-                      sortBy: 'newest'
-                    })}
-                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                  >
-                    Reset Filters
-                  </button>
+                    <option value="newest">Newest</option>
+                    <option value="price-low-high">Price: Low to High</option>
+                    <option value="price-high-low">Price: High to Low</option>
+                    <option value="rating">Customer Rating</option>
+                  </select>
                 </div>
-              </div>
-            )}
-            
-            <div className="flex-1">
-              {isLoading ? (
-                <div className="flex h-64 items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                </div>
-              ) : products.length === 0 ? (
-                <div className="flex h-64 flex-col items-center justify-center text-center">
-                  <p className="text-lg font-medium text-gray-900">No products found</p>
-                  <p className="mt-2 text-sm text-gray-600">Try adjusting your filters or check back later</p>
-                </div>
-              ) : (
-                <div className={`grid gap-x-6 gap-y-10 sm:gap-x-8 ${getGridClass()}`}>
-                  {products.map((product) => (
-                    <motion.div
-                      key={product._id}
-                      className="group relative flex flex-col"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
+                
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">View:</span>
+                  {[2, 3, 4].map((num) => (
+                    <button 
+                      key={num} 
+                      className={`px-2 text-sm font-medium transition-colors ${
+                        productsPerRow === num 
+                          ? 'text-indigo-600 underline' 
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                      onClick={() => handleViewChange(num)}
                     >
-                      <div 
-                        className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-all group-hover:shadow-md"
-                        onMouseEnter={() => handleMouseEnter(product._id)}
-                        onMouseLeave={() => handleMouseLeave(product._id)}
-                        onClick={() => handleProductClick(product._id)}
-                      >
-                        <div className="relative h-full w-full cursor-pointer">
-                          {/* Primary Image */}
-                          <img
-                            src={product.images.image1}
-                            alt={product.name}
-                            className="h-full w-full object-cover transition-opacity duration-300"
-                            style={{ opacity: activeImageIndex[product._id] ? 0 : 1 }}
-                          />
-                          
-                          {/* Secondary Image (shown on hover) */}
-                          <img
-                            src={product.images.image2}
-                            alt={`${product.name} - alternate view`}
-                            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-                            style={{ opacity: activeImageIndex[product._id] ? 1 : 0 }}
-                          />
-                        </div>
-                        
-                        {/* Labels */}
-                        <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-                          {product.brand && (
-                            <span className="rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white">
-                              {product.brand}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {/* Wishlist button */}
-                        <button
-                          onClick={(e) => toggleFavorite(product.name, e)}
-                          className="absolute right-4 top-4 z-10 rounded-full bg-white p-2 shadow-md transition-transform hover:scale-110"
-                          aria-label={favorites[product.name] ? "Remove from favorites" : "Add to favorites"}
-                        >
-                          <Heart
-                            className={`h-5 w-5 ${favorites[product.name] ? "fill-red-500 text-red-500" : "text-gray-600"}`}
-                          />
-                        </button>
-                      </div>
-                      
-                      {/* Product info */}
-                      <div className="mt-4 flex flex-col">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-500">
-                            {typeof product.category === 'object' ? product.category.name : 'Unknown Category'}
-                          </p>
-                          {product.rating && (
-                            <div className="flex items-center gap-1">
-                              {renderRatingStars(product.rating)}
-                              {product.reviews && (
-                                <span className="ml-1 text-xs text-gray-500">({product.reviews})</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="mt-2 cursor-pointer text-base font-medium text-gray-900 group-hover:text-indigo-600" onClick={() => handleProductClick(product._id)}>
-                          {product.name}
-                        </h3>
-                        <div className="mt-2 flex items-center gap-2">
-                          <p className="text-lg font-bold text-gray-900">₹{product.priceINR}</p>
-                          {product.originalPrice && (
-                            <p className="text-sm text-gray-500 line-through">₹{product.originalPrice}</p>
-                          )}
-                          {(product.discount && product.discount > 0) && (
-                            <p className="text-sm font-medium text-green-600">{product.discount}% off</p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
+                      {num}
+                    </button>
                   ))}
                 </div>
-              )}
-              
-              {/* Show More Button */}
-              {!isLoading && visibleProducts < filteredProducts.length && (
-                <div className="mt-12 flex justify-center">
-                  <Button
-                    onClick={handleShowMore}
-                    className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-600 to-indigo-800 px-8 py-3 text-base font-semibold text-white transition-all duration-300 ease-out hover:from-indigo-700 hover:to-indigo-900"
-                  >
-                    <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-800 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
-                    <span className="relative flex items-center gap-2">
-                      Show More Products
-                      <ArrowUpDown className="h-4 w-4" />
-                    </span>
-                  </Button>
+                
+                <button
+                  className="hidden items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 lg:flex"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4" />
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col lg:flex-row">
+              {showFilters && (
+                <div className="mb-8 w-full shrink-0 pr-0 lg:mb-0 lg:w-64 lg:pr-8">
+                  <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Filters</h3>
+                    
+                    <div className="mb-6">
+                      <h4 className="mb-2 text-sm font-medium text-gray-700">Price Range</h4>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">₹{filters.priceRange[0]}</span>
+                        <span className="text-sm text-gray-600">₹{filters.priceRange[1]}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={minPrice || 0}
+                        max={maxPrice || 50000}
+                        value={filters.priceRange[1]}
+                        onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
+                        className="mt-2 w-full"
+                      />
+                    </div>
+                    
+                    {uniqueBrands.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="mb-2 text-sm font-medium text-gray-700">Brands</h4>
+                        <div className="space-y-2">
+                          {uniqueBrands.map((brand) => (
+                            <label key={brand} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={filters.brands.includes(brand)}
+                                onChange={() => toggleFilterValue('brands', brand)}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-600">{brand}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={() => setFilters({
+                        priceRange: [minPrice || 0, maxPrice || 50000],
+                        brands: [],
+                        sortBy: 'newest'
+                      })}
+                      className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
                 </div>
               )}
+              
+              <div className="flex-1">
+                {isLoading ? (
+                  <div className="flex h-64 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                  </div>
+                ) : products.length === 0 ? (
+                  <div className="flex h-64 flex-col items-center justify-center text-center">
+                    <p className="text-lg font-medium text-gray-900">No products found</p>
+                    <p className="mt-2 text-sm text-gray-600">Try adjusting your filters or check back later</p>
+                  </div>
+                ) : (
+                  <div className={`grid gap-x-6 gap-y-10 sm:gap-x-8 ${getGridClass()}`}>
+                    {products.map((product) => (
+                      <motion.div
+                        key={product._id}
+                        className="group relative flex flex-col"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div 
+                          className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm transition-all group-hover:shadow-md"
+                          onMouseEnter={() => handleMouseEnter(product._id)}
+                          onMouseLeave={() => handleMouseLeave(product._id)}
+                          onClick={() => handleProductClick(product._id)}
+                        >
+                          <div className="relative h-full w-full cursor-pointer">
+                            <img
+                              src={product.images.image1}
+                              alt={product.name}
+                              className="h-full w-full object-cover transition-opacity duration-300"
+                              style={{ opacity: activeImageIndex[product._id] ? 0 : 1 }}
+                            />
+                            
+                            <img
+                              src={product.images.image2}
+                              alt={`${product.name} - alternate view`}
+                              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+                              style={{ opacity: activeImageIndex[product._id] ? 1 : 0 }}
+                            />
+                          </div>
+                          
+                          <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+                            {product.brand && (
+                              <span className="rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white">
+                                {product.brand}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <button
+                            onClick={(e) => toggleFavorite(product.name, e)}
+                            className="absolute right-4 top-4 z-10 rounded-full bg-white p-2 shadow-md transition-transform hover:scale-110"
+                            aria-label={favorites[product.name] ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            <Heart
+                              className={`h-5 w-5 ${favorites[product.name] ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+                            />
+                          </button>
+                        </div>
+                        
+                        <div className="mt-4 flex flex-col">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-500">
+                              {product.categoryId ? product.categoryId.name : 'Unknown Category'}
+                            </p>
+                            {product.rating && (
+                              <div className="flex items-center gap-1">
+                                {renderRatingStars(product.rating)}
+                                {product.reviews && (
+                                  <span className="ml-1 text-xs text-gray-500">({product.reviews})</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <h3 className="mt-2 cursor-pointer text-base font-medium text-gray-900 group-hover:text-indigo-600" onClick={() => handleProductClick(product._id)}>
+                            {product.name}
+                          </h3>
+                          <div className="mt-2 flex items-center gap-2">
+                            <p className="text-lg font-bold text-gray-900">₹{product.priceINR}</p>
+                            {product.originalPrice && (
+                              <p className="text-sm text-gray-500 line-through">₹{product.originalPrice}</p>
+                            )}
+                            {(product.discount && product.discount > 0) && (
+                              <p className="text-sm font-medium text-green-600">{product.discount}% off</p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+                
+                {!isLoading && visibleProducts < filteredProducts.length && (
+                  <div className="mt-12 flex justify-center">
+                    <Button
+                      onClick={handleShowMore}
+                      className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-600 to-indigo-800 px-8 py-3 text-base font-semibold text-white transition-all duration-300 ease-out hover:from-indigo-700 hover:to-indigo-900"
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-800 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+                      <span className="relative flex items-center gap-2">
+                        Show More Products
+                        <ArrowUpDown className="h-4 w-4" />
+                      </span>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Recently Viewed Products */}
-      <div className="bg-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="mb-8 text-center text-3xl font-bold tracking-tight text-gray-900">
-            RECENTLY VIEWED
-          </h2>
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {products.slice(0, 5).map((product) => (
-              <div
-                key={`recent-${product._id}`}
-                className="group cursor-pointer"
-                onClick={() => handleProductClick(product._id)}
-              >
-                <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  <img
-                    src={product.images.image1}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
+  
+        <div className="bg-white py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <h2 className="mb-8 text-center text-3xl font-bold tracking-tight text-gray-900">
+              RECENTLY VIEWED
+            </h2>
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {products.slice(0, 5).map((product) => (
+                <div
+                  key={`recent-${product._id}`}
+                  className="group cursor-pointer"
+                  onClick={() => handleProductClick(product._id)}
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+                    <img
+                      src={product.images.image1}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900 line-clamp-1">{product.name}</h3>
+                  <p className="mt-1 text-sm font-medium text-gray-900">₹{product.priceINR}</p>
                 </div>
-                <h3 className="mt-2 text-sm font-medium text-gray-900 line-clamp-1">{product.name}</h3>
-                <p className="mt-1 text-sm font-medium text-gray-900">₹{product.priceINR}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+  
+        <Footer />
       </div>
-
-      <Footer />
-    </div>
-  )
-}
+    )
+  }

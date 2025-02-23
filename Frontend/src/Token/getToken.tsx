@@ -1,5 +1,5 @@
 
-export const useGetToken = (name: "adminToken") => {
+export const useGetToken = (name: string) => {
     try {
         console.log("Name received:", name);
         const localStorageToken = localStorage.getItem(name);

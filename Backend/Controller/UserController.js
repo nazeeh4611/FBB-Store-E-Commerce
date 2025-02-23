@@ -32,9 +32,7 @@ export const getCategory = async(req,res)=>{
 export const getSubCategories = async(req,res)=>{
     try {
         const id = req.params.id
-        console.log(id,"may")
         const category = await subcategoryModel.find({categoryId:id})
-        console.log(category,"after")
     if(category){
         res.status(200).json(category)
     }
@@ -48,7 +46,7 @@ export const getDetails = async(req,res)=>{
     try {
         const {id} = req.params
 
-        const product = await productModel.findById(id).populate('subCategoryId', 'name')
+        const product = await productModel.findById(id).populate('subCategoryId', 'name').populate("seller",)
         res.status(200).json(product)
     } catch (error) {
         res.status(500).json({message:"Internal server error"})
@@ -88,9 +86,11 @@ export const ProductType = async(req,res)=>{
 export const relatedProduct = async(req,res)=>{
     try {
      const categoryId = req.params.category
-
-     const product = await productModel.find({subCategoryId:categoryId})
-     res.status(200).json(product)
+ const products = await productModel.find({ subCategoryId:categoryId })  
+            .populate("subCategoryId")
+            .populate("categoryId"); 
+        
+     res.status(200).json(products)
     } catch (error) {
         
     }

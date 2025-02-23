@@ -7,6 +7,8 @@ import ProductType from "../Components/Admin/ProductType";
 import AdminLogin from "../Components/Admin/Login";
 import Protect from "./Protect/Protected";
 import ReProtect from "./Protect/ReverseProtect";
+import SellerPage from "../Components/Admin/Sellers";
+import SellerProducts from "../Components/Admin/SellerProduct";
 
 
 const Admin: React.FC = () => {
@@ -18,7 +20,9 @@ const Admin: React.FC = () => {
           <Route path="/product-type" element={<Protect component={ProductType}/>} />
           <Route path="/product" element={<Protect component={ProductPage}/>} />
           <Route path="/login" element={<ReProtect component={AdminLogin}/>} />
-          </Routes>
+          <Route path="/sellers" element={<Protect component={SellerPage} />} />     
+          <Route path="/sellers/:id" element={<Protect component={SellerProducts} />} />     
+           </Routes>
       </>
     );
   };

@@ -27,6 +27,13 @@ interface ProductData {
   images: ProductImages
   createdAt: string
   updatedAt: string
+  seller:Seller
+}
+
+interface Seller{
+  name:string,
+  DXB:string,
+  INR:string
 }
 
 interface Category {
@@ -176,8 +183,8 @@ export default function ProductPage() {
   const { id } = useParams<{ id: string }>()
 
   const PHONE_NUMBERS = {
-    IN: '9207904611',
-    AE: '971501234567'
+    IN: productData?.seller.INR,
+    AE: productData?.seller.DXB
   }
 
   const api = axios.create({
@@ -195,6 +202,7 @@ export default function ProductPage() {
     try {
       setLoading(true)
       const response = await api.get(`/get-product/${id}`)
+      console.log(response.data)
       setProductData(response.data)
     } catch (error) {
       console.error("Error fetching product:", error)
@@ -584,6 +592,10 @@ I'm interested in this product. Could you please provide more information?`)
               transition={{ duration: 0.4, delay: 0.6 }}
               className="space-y-3 pt-6 border-t"
             >
+               <div className="flex gap-2">
+                <span className="font-semibold text-gray-700">Seller:</span>
+                <span className="text-gray-600">{productData.seller.name}</span>
+              </div>
               <div className="flex gap-2">
                 <span className="font-semibold text-gray-700">CATEGORY:</span>
                 <span className="text-gray-600">{productData.subCategoryId.name}</span>

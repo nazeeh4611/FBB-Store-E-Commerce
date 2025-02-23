@@ -32,6 +32,11 @@ const ProductSchema = new mongoose.Schema({
     ref: 'Category',
     required: true
   },
+  seller:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Seller",
+    required:true
+  },
   active: {
     type: Boolean,
     default: true

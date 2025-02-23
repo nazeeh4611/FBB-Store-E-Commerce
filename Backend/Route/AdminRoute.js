@@ -1,5 +1,5 @@
 import express from "express";
-import { addCategory, getCategory, addProduct, getProducts, addSubcategory, getSubCategory, updateTrending, updateProduct, SignUp, login, editCategory } from "../Controller/AdminController.js";
+import { addCategory, getCategory, addSubcategory, getSubCategory, updateTrending, SignUp, login, editCategory, getSellers, updateStatus, getSellerProduct, sellerByid } from "../Controller/AdminController.js";
 import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
@@ -40,56 +40,29 @@ const productUpload = multer({
   }),
 });
 
-const handleProductImages = async (req, res, next) => {
-  try {
-    const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
-    req.existingImages = existingImages;
 
-    const filesToUpload = [];
-
-    for (let i = 1; i <= 4; i++) {
-      const fieldName = `image${i}`;
-      if (req.files?.[fieldName] || !existingImages[i - 1]) {
-        filesToUpload.push({ name: fieldName, maxCount: 1 });
-      }
-    }
-
-    if (filesToUpload.length > 0) {
-      return productUpload.fields(filesToUpload)(req, res, (err) => {
-        if (err) {
-          console.error("Error uploading files:", err);
-          return res.status(400).json({ error: "Error uploading files" });
-        }
-        next();
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("Error in handleProductImages:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
 
 adminRouter.post("/add-category", categoryUpload.single('image'), addCategory);
 adminRouter.get("/get-category", getCategory);
 adminRouter.post("/add-subcategory", categoryUpload.single('image'), addSubcategory);
 adminRouter.get("/get-subcategory", getSubCategory);
 
-adminRouter.post("/add-product", productUpload.fields([
-  { name: 'image1', maxCount: 1 },
-  { name: 'image2', maxCount: 1 },
-  { name: 'image3', maxCount: 1 },
-  { name: 'image4', maxCount: 1 }
-]), addProduct);
+// adminRouter.post("/add-product", productUpload.fields([
+//   { name: 'image1', maxCount: 1 },
+//   { name: 'image2', maxCount: 1 },
+//   { name: 'image3', maxCount: 1 },
+//   { name: 'image4', maxCount: 1 }
+// ]), addProduct);
 
-adminRouter.get("/get-products", getProducts);
 adminRouter.put("/update-trending/:id", updateTrending);
 
-adminRouter.put("/edit-product/:id", handleProductImages, updateProduct);
+// adminRouter.put("/edit-product/:id", handleProductImages, updateProduct);
 adminRouter.post("/register",SignUp)
 adminRouter.post("/login",login)
 adminRouter.put("/edit-category",categoryUpload.single('image'),editCategory)
-
+adminRouter.get("/get-sellers",getSellers)
+adminRouter.put("/update-status/:id",updateStatus)
+adminRouter.get("/get-products/:id",getSellerProduct)
+adminRouter.get("/get-seller/:id",sellerByid)
 
 export default adminRouter;

@@ -7,6 +7,7 @@ export const Sidebar = () => {
     { name: 'Category', path: '/admin/category' },
     { name: 'Product', path: '/admin/product' },
     { name: 'Sub-Category', path: '/admin/sub-category' },
+    {name: 'Sellers' ,path:'/admin/sellers'}
   ];
 
   const handleLogout = () => {
