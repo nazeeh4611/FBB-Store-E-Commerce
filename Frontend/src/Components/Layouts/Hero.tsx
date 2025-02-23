@@ -16,6 +16,7 @@ import TrendingCarousel from "./Carousel";
 import axios from "axios";
 import { baseurl } from "../../Constant/Base";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Category {
   name: string,
@@ -404,95 +405,99 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </div>
 
         {/* Banner Section */}
-        <section className="container mx-auto px-4 py-8 md:py-12 mb-12 md:mb-24 overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-8 lg:space-x-16 relative">
-            <div className="w-full md:w-1/2 h-[400px] md:h-[600px] relative">
-              <div className="absolute inset-0 overflow-hidden rounded-lg shadow-xl border border-[#D4AF37]/10">
-                <AnimatePresence initial={false}>
-                  <motion.div
-                    key={currentBannerIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1, ease: "easeInOut" }}
-                    className="relative w-full h-full"
-                    ref={bannerRef}
-                  >
-                    <img
-                      src={bannerSlides[currentBannerIndex].image}
-                      alt={bannerSlides[currentBannerIndex].title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ objectPosition: 'center center' }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
-                  </motion.div>
-                </AnimatePresence>
-                
-                {/* Decorative corner elements */}
-                <div className="absolute top-4 left-4 w-8 md:w-12 h-8 md:h-12 border-l-2 border-t-2 border-[#D4AF37]/30 z-10"></div>
-                <div className="absolute bottom-4 right-4 w-8 md:w-12 h-8 md:h-12 border-r-2 border-b-2 border-[#D4AF37]/30 z-10"></div>
-                
-                {/* Banner navigation arrows */}
-                <button 
-                  className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-                  onClick={prevBannerSlide}
-                >
-                  <FiChevronLeft size={16} className="md:w-5 md:h-5" />
-                </button>
-                
-                <button 
-                  className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-300 hover:bg-[#D4AF37]/20 hover:text-[#D4AF37] z-10"
-                  onClick={nextBannerSlide}
-                >
-                  <FiChevronRight size={16} className="md:w-5 md:h-5" />
-                </button>
-              </div>
-            </div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="w-full md:w-1/2 mt-6 md:mt-0"
+        <section className="relative py-16 bg-gradient-to-b from-gray-50 to-white">
+  <div className="container mx-auto px-4 max-w-7xl">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-12 relative">
+      {/* Image Container */}
+      <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative group">
+        <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={currentBannerIndex}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative w-full h-full"
+              ref={bannerRef}
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentBannerIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white p-6 md:p-8 shadow-lg relative border-l-4"
-                  style={{ borderColor: bannerSlides[currentBannerIndex].accent }}
-                >
-                  <div className="absolute top-0 right-0 w-12 md:w-16 h-12 md:h-16 bg-[#D4AF37]/5 -z-10"></div>
-                  
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-3 md:mb-4 transition-colors duration-500">
-                    <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
-                      {bannerSlides[currentBannerIndex].title}
-                    </span>
-                  </h2>
-                  <div className="w-12 md:w-16 h-1 mb-4 md:mb-6" style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}></div>
-                  <p className="text-gray-600 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
-                    {bannerSlides[currentBannerIndex].description}
-                  </p>
-                  <motion.button 
-                    whileHover={{ x: 5 }}
-                    className="inline-flex items-center border-b-2 pb-1 font-medium transition-all text-sm md:text-base"
-                    style={{ 
-                      borderColor: bannerSlides[currentBannerIndex].accent,
-                      color: bannerSlides[currentBannerIndex].accent
-                    }}
-                  >
-                    VIEW MORE
-                    <FiArrowRight className="ml-2" />
-                  </motion.button>
-                </motion.div>
-              </AnimatePresence>
+              <img
+                src={bannerSlides[currentBannerIndex].image}
+                alt={bannerSlides[currentBannerIndex].title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
             </motion.div>
+          </AnimatePresence>
+
+          {/* Decorative Elements */}
+          <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg" />
+          <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg" />
+
+          {/* Navigation Buttons */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
+            <button
+              onClick={prevBannerSlide}
+              className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={nextBannerSlide}
+              className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
-        </section>
+        </div>
+      </div>
+
+      {/* Content Container */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        viewport={{ once: true }}
+        className="w-full lg:w-1/2 mt-8 lg:mt-0"
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentBannerIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white p-8 lg:p-10 rounded-2xl shadow-xl relative"
+          >
+            <div 
+              className="absolute top-0 left-0 w-2 h-full rounded-l-2xl"
+              style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}
+            />
+            
+            <h2 className="text-4xl font-bold mb-6">
+              <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
+                {bannerSlides[currentBannerIndex].title}
+              </span>
+            </h2>
+
+            <p className="text-gray-600 text-lg leading-relaxed mb-8">
+              {bannerSlides[currentBannerIndex].description}
+            </p>
+
+            <motion.button
+              whileHover={{ x: 5 }}
+              className="group inline-flex items-center space-x-2 text-lg font-semibold transition-colors duration-300"
+              style={{ color: bannerSlides[currentBannerIndex].accent }}
+            >
+              <span>Explore Now</span>
+              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+            </motion.button>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  </div>
+</section>
       </div>
 
       {/* New Arrivals Section */}
