@@ -265,3 +265,13 @@ export const sellerByid = async(req,res)=>{
   }
 }
 
+
+export const getProducts = async(req,res)=>{
+  try {
+    const products = await productModel.find().populate('categoryId', 'name').populate('subCategoryId','name').populate("seller","name")
+    console.log(products)
+    res.status(200).json(products)
+  } catch (error) {
+    
+  }
+}

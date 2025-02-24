@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight,Trash2 } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -55,6 +55,8 @@ const SellerProductPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>(['', '', '', '']);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     brand: '',
@@ -99,6 +101,30 @@ const SellerProductPage = () => {
     }
   };
 
+
+  const handleDeleteClick = (productId: string) => {
+    if (!seller.status) {
+      toast.error('Your account is pending approval. Please contact admin for more information.');
+      return;
+    }
+    setProductToDelete(productId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await api.delete(`/seller/delete-product/${productToDelete}`);
+      toast.success('Product deleted successfully');
+      await getProducts();
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    }
+  };
 
 
 const handleAddNewClick = () => {
@@ -198,40 +224,7 @@ const handleAddNewClick = () => {
     setImagePreviews(newPreviews);
   };
 
-  const handleTrendingToggle = async (productId: string, currentValue: boolean) => {
-    try {
-      setProducts(prevProducts => 
-        prevProducts.map(product => 
-          product._id === productId 
-            ? { ...product, trending: !currentValue }
-            : product
-        )
-      );
 
-      const response = await api.put(`/admin/update-trending/${productId}`, {
-        isTrending: !currentValue
-      });
-
-      if (!response.data) {
-        setProducts(prevProducts => 
-          prevProducts.map(product => 
-            product._id === productId 
-              ? { ...product, trending: currentValue }
-              : product
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Error updating trending status:', error);
-      setProducts(prevProducts => 
-        prevProducts.map(product => 
-          product._id === productId 
-            ? { ...product, trending: currentValue }
-            : product
-        )
-      );
-    }
-  };
 
   const handleEdit = (product: Product) => {
     if (!seller.status) {
@@ -498,7 +491,6 @@ const handleAddNewClick = () => {
                     Price (AED) <SortIndicator field="priceAED" />
                   </th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Images</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Trending</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -527,17 +519,6 @@ const handleAddNewClick = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={product.trending}
-                            onChange={() => handleTrendingToggle(product._id, product.trending)}
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </td>
-                      <td className="py-4 px-4">
                         <button 
                           className="text-blue-600 hover:text-blue-800"
                           onClick={() => handleEdit(product)}
@@ -545,6 +526,17 @@ const handleAddNewClick = () => {
                           <Edit2 size={20} />
                         </button>
                       </td>
+                      <td className="py-4 px-4">
+    <div className="flex space-x-2">
+      <button 
+        className="text-red-600 hover:text-red-800"
+        onClick={() => handleDeleteClick(product._id)}
+      >
+        <Trash2 size={20} />
+      </button>
+    </div>
+  </td>
+
                     </tr>
                   ))
                 ) : (
@@ -557,7 +549,35 @@ const handleAddNewClick = () => {
               </tbody>
             </table>
           </div>
-          
+          {deleteModalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+          Confirm Delete
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this product? This action cannot be undone.
+        </p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={() => {
+              setDeleteModalOpen(false);
+              setProductToDelete(null);
+            }}
+            className="px-4 py-2 text-gray-700 hover:text-gray-900"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
           {sortedProducts.length > 0 && totalPages > 1 && (
             <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 border-t border-gray-100 gap-4">
               <div className="text-sm text-gray-600">

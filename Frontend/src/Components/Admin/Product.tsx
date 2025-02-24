@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import  { useEffect, useState } from 'react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -25,40 +25,17 @@ interface Product {
   createdAt: string;
   updatedAt: string;
   trending: boolean;
+  seller:seller
 }
 
-interface ProductFormData {
-  name: string;
-  brand: string;
-  categoryId: string;
-  subCategoryId: string;
-  priceINR: string;
-  priceAED: string;
-  images: (File | null)[];
-  existingImages: string[];
-  isTrending: boolean;
+interface seller{
+  name:string
 }
+
+
 
 const ProductPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [imagePreviews, setImagePreviews] = useState<string[]>(['', '', '', '']);
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    brand: '',
-    categoryId: '',
-    subCategoryId: '',
-    priceINR: '',
-    priceAED: '',
-    images: [null, null, null, null],
-    existingImages: [],
-    isTrending: false
-  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('name');
@@ -70,92 +47,92 @@ const ProductPage = () => {
     baseURL: baseurl,
   });
 
-  const getCategories = async () => {
-    try {
-      const response = await api.get("/admin/get-category");
-      if (response.data && Array.isArray(response.data)) {
-        setCategories(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
+  // const getCategories = async () => {
+  //   try {
+  //     const response = await api.get("/admin/get-category");
+  //     if (response.data && Array.isArray(response.data)) {
+  //       setCategories(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching categories:', error);
+  //   }
+  // };
 
-  const getSubCategories = async () => {
-    try {
-      const response = await api.get("/admin/get-subcategory");
-      if (response.data && Array.isArray(response.data)) {
-        setSubCategories(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
-    }
-  };
+  // const getSubCategories = async () => {
+  //   try {
+  //     const response = await api.get("/admin/get-subcategory");
+  //     if (response.data && Array.isArray(response.data)) {
+  //       setSubCategories(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching subcategories:', error);
+  //   }
+  // };
 
   const getProducts = async () => {
     try {
       const response = await api.get("/admin/get-products");
-      if (response.data.products && Array.isArray(response.data.products)) {
-        setProducts(response.data.products);
+      if (response.data && Array.isArray(response.data)) {
+        setProducts(response.data);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
     }
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const categoryId = e.target.value;
-    setFormData({
-      ...formData,
-      categoryId,
-      subCategoryId: '',
-    });
+  // const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const categoryId = e.target.value;
+  //   setFormData({
+  //     ...formData,
+  //     categoryId,
+  //     subCategoryId: '',
+  //   });
     
-    const filtered = subCategories.filter(
-      (subCat) => subCat.categoryId._id === categoryId
-    );
-    setFilteredSubCategories(filtered);
-  };
+  //   const filtered = subCategories.filter(
+  //     (subCat) => subCat.categoryId._id === categoryId
+  //   );
+  //   setFilteredSubCategories(filtered);
+  // };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const newImages = [...formData.images];
-      newImages[index] = file;
+  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const newImages = [...formData.images];
+  //     newImages[index] = file;
       
-      const newExistingImages = [...formData.existingImages];
-      newExistingImages[index] = '';
+  //     const newExistingImages = [...formData.existingImages];
+  //     newExistingImages[index] = '';
       
-      const previewUrl = URL.createObjectURL(file);
-      const newPreviews = [...imagePreviews];
-      newPreviews[index] = previewUrl;
+  //     const previewUrl = URL.createObjectURL(file);
+  //     const newPreviews = [...imagePreviews];
+  //     newPreviews[index] = previewUrl;
       
-      setFormData(prev => ({
-        ...prev,
-        images: newImages,
-        existingImages: newExistingImages
-      }));
-      setImagePreviews(newPreviews);
-    }
-  };
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       images: newImages,
+  //       existingImages: newExistingImages
+  //     }));
+  //     setImagePreviews(newPreviews);
+  //   }
+  // };
 
-  const removeImage = (index: number) => {
-    const newImages = [...formData.images];
-    newImages[index] = null;
+  // const removeImage = (index: number) => {
+  //   const newImages = [...formData.images];
+  //   newImages[index] = null;
     
-    const newExistingImages = [...formData.existingImages];
-    newExistingImages[index] = '';
+  //   const newExistingImages = [...formData.existingImages];
+  //   newExistingImages[index] = '';
     
-    const newPreviews = [...imagePreviews];
-    newPreviews[index] = '';
+  //   const newPreviews = [...imagePreviews];
+  //   newPreviews[index] = '';
     
-    setFormData(prev => ({
-      ...prev,
-      images: newImages,
-      existingImages: newExistingImages
-    }));
-    setImagePreviews(newPreviews);
-  };
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     images: newImages,
+  //     existingImages: newExistingImages
+  //   }));
+  //   setImagePreviews(newPreviews);
+  // };
 
   const handleTrendingToggle = async (productId: string, currentValue: boolean) => {
     try {
@@ -192,96 +169,63 @@ const ProductPage = () => {
     }
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product._id);
-    
-    const imageArray = Array.isArray(product.images) 
-      ? product.images 
-      : Object.values(product.images || {});
-  
-    setFormData({
-      name: product.name,
-      brand: product.brand,
-      categoryId: product.categoryId._id,
-      subCategoryId: product.subCategoryId._id,
-      priceINR: product.priceINR.toString(),
-      priceAED: product.priceAED.toString(),
-      images: [null, null, null, null],
-      existingImages: imageArray as string[], 
-      isTrending: product.trending
-    });
-      
-    const previews = Array(4).fill('');
-    imageArray.forEach((url, index) => {
-      if (index < 4) {
-        previews[index] = url;
-      }
-    });
-    setImagePreviews(previews);
-  
-    const filtered = subCategories.filter(
-      (subCat) => subCat.categoryId._id === product.categoryId._id
-    );
-    setFilteredSubCategories(filtered);
-    
-    setIsModalOpen(true);
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('brand', formData.brand);
-      formDataToSend.append('categoryId', formData.categoryId);
-      formDataToSend.append('subCategoryId', formData.subCategoryId);
-      formDataToSend.append('priceINR', formData.priceINR);
-      formDataToSend.append('priceAED', formData.priceAED);
-      formDataToSend.append('isTrending', formData.isTrending.toString());
-      
-      const nonEmptyExistingImages = formData.existingImages.filter(url => url !== '');
-      formDataToSend.append('existingImages', JSON.stringify(nonEmptyExistingImages));
-      
-      formData.images.forEach((image, index) => {
-        if (image) {
-          formDataToSend.append(`image${index + 1}`, image);
-        }
-      });
-      
-      if (editingProduct) {
-        await api.put(`/admin/edit-product/${editingProduct}`, formDataToSend);
-      } else {
-        await api.post("/admin/add-product", formDataToSend);
-      }
-      
-      await getProducts();
-      handleCloseModal();
-    } catch (error) {
-      console.error('Error saving product:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingProduct(null);
-    setFormData({
-      name: '',
-      brand: '',
-      categoryId: '',
-      subCategoryId: '',
-      priceINR: '',
-      priceAED: '',
-      images: [null, null, null, null],
-      existingImages: [],
-      isTrending: false
-    });
-    setImagePreviews(['', '', '', '']);
-    setFilteredSubCategories([]);
-  };
+  //   try {
+  //     const formDataToSend = new FormData();
+  //     formDataToSend.append('name', formData.name);
+  //     formDataToSend.append('brand', formData.brand);
+  //     formDataToSend.append('categoryId', formData.categoryId);
+  //     formDataToSend.append('subCategoryId', formData.subCategoryId);
+  //     formDataToSend.append('priceINR', formData.priceINR);
+  //     formDataToSend.append('priceAED', formData.priceAED);
+  //     formDataToSend.append('isTrending', formData.isTrending.toString());
+      
+  //     const nonEmptyExistingImages = formData.existingImages.filter(url => url !== '');
+  //     formDataToSend.append('existingImages', JSON.stringify(nonEmptyExistingImages));
+      
+  //     formData.images.forEach((image, index) => {
+  //       if (image) {
+  //         formDataToSend.append(`image${index + 1}`, image);
+  //       }
+  //     });
+      
+  //     if (editingProduct) {
+  //       await api.put(`/admin/edit-product/${editingProduct}`, formDataToSend);
+  //     } else {
+  //       await api.post("/admin/add-product", formDataToSend);
+  //     }
+      
+  //     await getProducts();
+  //     handleCloseModal();
+  //   } catch (error) {
+  //     console.error('Error saving product:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleCloseModal = () => {
+  //   setIsModalOpen(false);
+  //   setEditingProduct(null);
+  //   setFormData({
+  //     name: '',
+  //     brand: '',
+  //     categoryId: '',
+  //     subCategoryId: '',
+  //     priceINR: '',
+  //     priceAED: '',
+  //     images: [null, null, null, null],
+  //     existingImages: [],
+  //     isTrending: false
+  //   });
+  //   setImagePreviews(['', '', '', '']);
+  //   setFilteredSubCategories([]);
+  // };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -305,6 +249,10 @@ const ProductPage = () => {
       case 'name':
         aValue = a.name;
         bValue = b.name;
+        break;
+      case 'seller':
+        aValue = a.seller;
+        bValue = b.seller;
         break;
       case 'brand':
         aValue = a.brand;
@@ -356,8 +304,8 @@ const ProductPage = () => {
 
   useEffect(() => {
     getProducts();
-    getCategories();
-    getSubCategories();
+    // getCategories();
+    // getSubCategories();
   }, []);
 
   return (
@@ -388,13 +336,7 @@ const ProductPage = () => {
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
               
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <PlusCircle size={20} />
-                <span>Add Product</span>
-              </button>
+             
             </div>
           </div>
   
@@ -407,6 +349,12 @@ const ProductPage = () => {
                     onClick={() => handleSort('name')}
                   >
                     Product Name <SortIndicator field="name" />
+                  </th>
+                  <th 
+                    className="pb-4 px-4 text-gray-600 font-semibold cursor-pointer"
+                    onClick={() => handleSort('seller')}
+                  >
+                    Seller <SortIndicator field="seller" />
                   </th>
                   <th 
                     className="pb-4 px-4 text-gray-600 font-semibold cursor-pointer"
@@ -437,7 +385,6 @@ const ProductPage = () => {
                   </th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Images</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Trending</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -448,6 +395,7 @@ const ProductPage = () => {
                       className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                     >
                       <td className="py-4 px-4 text-gray-800">{product.name}</td>
+                      <td className="py-4 px-4 text-gray-800">{product.seller.name}</td>
                       <td className="py-4 px-4 text-gray-800">{product.brand}</td>
                       <td className="py-4 px-4 text-gray-800">{product.categoryId.name}</td>
                       <td className="py-4 px-4 text-gray-800">{product.subCategoryId.name}</td>
@@ -476,12 +424,7 @@ const ProductPage = () => {
                         </label>
                       </td>
                       <td className="py-4 px-4">
-                        <button 
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Edit2 size={20} />
-                        </button>
+                        
                       </td>
                     </tr>
                   ))
@@ -594,198 +537,7 @@ const ProductPage = () => {
           )}
         </div>
   
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-              <div className="flex justify-between items-center p-6 border-b border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={24} />
-                </button>
-              </div>
   
-              <div className="overflow-y-auto flex-1">
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Product Name
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Brand
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.brand}
-                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-  
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Category
-                      </label>
-                      <select
-                        value={formData.categoryId}
-                        onChange={handleCategoryChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((category) => (
-                          <option key={category._id} value={category._id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-  
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sub Category
-                      </label>
-                      <select
-                        value={formData.subCategoryId}
-                        onChange={(e) => setFormData({ ...formData, subCategoryId: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                        disabled={!formData.categoryId}
-                      >
-                        <option value="">Select Sub Category</option>
-                        {filteredSubCategories.map((subCategory) => (
-                          <option key={subCategory._id} value={subCategory._id}>
-                            {subCategory.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-  
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price (INR)
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.priceINR}
-                        onChange={(e) => setFormData({ ...formData, priceINR: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-  
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price (AED)
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.priceAED}
-                        onChange={(e) => setFormData({ ...formData, priceAED: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-  
-                    <div className="col-span-2">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={formData.isTrending}
-                          onChange={(e) => setFormData({ ...formData, isTrending: e.target.checked })}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        <span className="ml-3 text-sm font-medium text-gray-700">Set as Trending</span>
-                      </label>
-                    </div>
-                  </div>
-  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product Images
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {[0, 1, 2, 3].map((index) => (
-                        <div key={index} className="mt-1 flex flex-col items-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                          {imagePreviews[index] || formData.existingImages[index] ? (
-                            <div className="relative w-full h-48">
-                              <img
-                                src={imagePreviews[index] || formData.existingImages[index]}
-                                alt={`Preview ${index + 1}`}
-                                className="h-full w-full object-cover rounded-lg"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-2 text-center">
-                              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                              <div className="flex text-sm text-gray-600">
-                                <label className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500">
-                                  <span>Upload Image {index + 1}</span>
-                                  <input
-                                    type="file"
-                                    className="sr-only"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageChange(e, index)}
-                                  />
-                                </label>
-                              </div>
-                              <p className="text-xs text-gray-500">
-                                PNG, JPG up to 10MB
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-  
-                  <div className="sticky bottom-0 bg-white pt-4 pb-4 border-t border-gray-100">
-                    <div className="flex justify-end space-x-4">
-                      <button
-                        type="button"
-                        onClick={handleCloseModal}
-                        className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                      >
-                        {isLoading ? (editingProduct ? 'Updating...' : 'Creating...') : (editingProduct ? 'Update Product' : 'Create Product')}
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

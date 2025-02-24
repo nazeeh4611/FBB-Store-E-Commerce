@@ -345,3 +345,14 @@ export const SignUp = async(req,res)=>{
     }
   };
   
+
+
+  export const deleteProduct = async(req,res)=>{
+    try {
+      const id = req.params.id
+      const response = await productModel.findByIdAndDelete(id)
+      res.status(200).json({message:"deleted success"})
+    } catch (error) {
+      
+    }
+  }

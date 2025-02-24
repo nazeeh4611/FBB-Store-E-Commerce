@@ -3,7 +3,7 @@ import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
 import dotenv from 'dotenv';
-import { SignUp, addProduct, getProducts, login, resetPassword, updateProduct, updateProfile } from "../Controller/SellerController.js";
+import { SignUp, addProduct, deleteProduct, getProducts, login, resetPassword, updateProduct, updateProfile } from "../Controller/SellerController.js";
 
 dotenv.config();
 
@@ -85,6 +85,7 @@ SellerRouter.post("/add-product", productUpload.fields([
 
   SellerRouter.post('/reset-password/:userId', resetPassword);
   SellerRouter.put('/update-profile/:userId', updateProfile);
+  SellerRouter.delete("/delete-product/:id",deleteProduct)
 
 
 

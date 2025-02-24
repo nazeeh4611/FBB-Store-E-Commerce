@@ -250,7 +250,7 @@ const SellerRegistration = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/seller/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link to="/seller/" className="text-blue-600 hover:text-blue-700 font-medium">
                 Sign in
               </Link>
             </p>
