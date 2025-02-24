@@ -1,10 +1,8 @@
-import  { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { RiStarFill } from "react-icons/ri";
-
-// Import images
 import Hero1 from "../Layouts/Img/Hero1.jpg";
 import Hero2 from "../Layouts/Img/Hero2.jpg";
 import shoe from "../Layouts/Img/shoe.jpeg";
@@ -32,7 +30,10 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    const hasShownWelcome = sessionStorage.getItem('hasShownWelcome');
+    return !hasShownWelcome;
+  });
 
   const navigate = useNavigate();
   
@@ -51,6 +52,18 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Welcome overlay effect
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => {
+        setShowWelcome(false);
+        sessionStorage.setItem('hasShownWelcome', 'true');
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
   
   const heroSlides = [
     {
@@ -77,15 +90,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     typeSpeed: 70,
     deleteSpeed: 50
   });
-
-  // Welcome overlay effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Autoplay for hero slider with pause on hover
   useEffect(() => {
@@ -314,12 +318,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               onClick={onShopNowClick}
               className="bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 rounded-full transition-all duration-300 text-base md:text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4AF37] group border border-white/20 hover:border-[#D4AF37]"
             >
-            <Link to="/category">
-            <span className="flex items-center">
-                Shop Now
-                <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
-              </span>
-            </Link>
+              <Link to="/category">
+                <span className="flex items-center">
+                  Shop Now
+                  <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
             </motion.button>
           </motion.div>
         </div>
@@ -408,98 +412,98 @@ const Hero = ({ onShopNowClick = () => {} }) => {
 
         {/* Banner Section */}
         <section className="relative py-16 bg-gradient-to-b from-gray-50 to-white">
-  <div className="container mx-auto px-4 max-w-7xl">
-    <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-12 relative">
-      {/* Image Container */}
-      <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative group">
-        <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
-          <AnimatePresence initial={false}>
-            <motion.div
-              key={currentBannerIndex}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative w-full h-full"
-              ref={bannerRef}
-            >
-              <img
-                src={bannerSlides[currentBannerIndex].image}
-                alt={bannerSlides[currentBannerIndex].title}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
-            </motion.div>
-          </AnimatePresence>
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-12 relative">
+              {/* Image Container */}
+              <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative group">
+                <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+                  <AnimatePresence initial={false}>
+                    <motion.div
+                      key={currentBannerIndex}
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="relative w-full h-full"
+                      ref={bannerRef}
+                    >
+                      <img
+                        src={bannerSlides[currentBannerIndex].image}
+                        alt={bannerSlides[currentBannerIndex].title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
+                    </motion.div>
+                  </AnimatePresence>
 
-          {/* Decorative Elements */}
-          <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg" />
-          <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg" />
+                  {/* Decorative Elements */}
+                  <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg" />
+                  <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg" />
 
-          {/* Navigation Buttons */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
-            <button
-              onClick={prevBannerSlide}
-              className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={nextBannerSlide}
-              className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+                  {/* Navigation Buttons */}
+                  <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
+                    <button
+                      onClick={prevBannerSlide}
+                      className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={nextBannerSlide}
+                      className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white hover:text-black transition-all duration-300"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Container */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="w-full lg:w-1/2 mt-8 lg:mt-0"
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentBannerIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white p-8 lg:p-10 rounded-2xl shadow-xl relative"
+                  >
+                    <div 
+                      className="absolute top-0 left-0 w-2 h-full rounded-l-2xl"
+                      style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}
+                    />
+                    
+                    <h2 className="text-4xl font-bold mb-6">
+                      <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
+                        {bannerSlides[currentBannerIndex].title}
+                      </span>
+                    </h2>
+
+                    <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                      {bannerSlides[currentBannerIndex].description}
+                    </p>
+
+                    <motion.button
+                      whileHover={{ x: 5 }}
+                      className="group inline-flex items-center space-x-2 text-lg font-semibold transition-colors duration-300"
+                      style={{ color: bannerSlides[currentBannerIndex].accent }}
+                    >
+                      <span>Explore Now</span>
+                      <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                    </motion.button>
+                  </motion.div>
+                </AnimatePresence>
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Content Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        viewport={{ once: true }}
-        className="w-full lg:w-1/2 mt-8 lg:mt-0"
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentBannerIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white p-8 lg:p-10 rounded-2xl shadow-xl relative"
-          >
-            <div 
-              className="absolute top-0 left-0 w-2 h-full rounded-l-2xl"
-              style={{ backgroundColor: bannerSlides[currentBannerIndex].accent }}
-            />
-            
-            <h2 className="text-4xl font-bold mb-6">
-              <span style={{ color: bannerSlides[currentBannerIndex].accent }}>
-                {bannerSlides[currentBannerIndex].title}
-              </span>
-            </h2>
-
-            <p className="text-gray-600 text-lg leading-relaxed mb-8">
-              {bannerSlides[currentBannerIndex].description}
-            </p>
-
-            <motion.button
-              whileHover={{ x: 5 }}
-              className="group inline-flex items-center space-x-2 text-lg font-semibold transition-colors duration-300"
-              style={{ color: bannerSlides[currentBannerIndex].accent }}
-            >
-              <span>Explore Now</span>
-              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-            </motion.button>
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
-    </div>
-  </div>
-</section>
+        </section>
       </div>
 
       {/* New Arrivals Section */}
@@ -547,10 +551,10 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             className="bg-transparent text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 border border-white hover:border-[#D4AF37] rounded-sm transition-all duration-300 text-sm md:text-lg font-medium group"
           >
             <Link to="/shop">
-            <span className="flex items-center">
-              SHOP NOW
-              <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
-            </span>
+              <span className="flex items-center">
+                SHOP NOW
+                <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
+              </span>
             </Link>
           </motion.button>
         </div>
@@ -564,31 +568,30 @@ const Hero = ({ onShopNowClick = () => {} }) => {
       
       {/* Floating badge */}
       <div
-  className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center"
-  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
->
-  <motion.div
-    initial={{ scale: 0.8, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    transition={{ 
-      duration: 0.5,
-      delay: 3,
-      scale: {
-        type: "spring",
-        stiffness: 100
-      }
-    }}
-    whileHover={{ scale: 1.05 }}
-    className="w-12 md:w-16 h-12 md:h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
-  >
-    <div className="w-10 md:w-14 h-10 md:h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
-      <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform text-sm md:text-base" />
-    </div>
-  </motion.div>
-</div>
-
+        className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ 
+            duration: 0.5,
+            delay: 3,
+            scale: {
+              type: "spring",
+              stiffness: 100
+            }
+          }}
+          whileHover={{ scale: 1.05 }}
+          className="w-12 md:w-16 h-12 md:h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
+        >
+          <div className="w-10 md:w-14 h-10 md:h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
+            <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform text-sm md:text-base" />
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };
 
-export default Hero;
+export default Hero;            
