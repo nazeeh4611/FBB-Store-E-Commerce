@@ -19,19 +19,33 @@ interface Product {
 export default function TrendingCarousel() {
   const [products, setProducts] = useState<Product[]>([]);
   const [position, setPosition] = useState(0);
-  const itemWidth = 25;
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+  
   const api = axios.create({
-    baseURL:baseurl
-  })
+    baseURL: baseurl
+  });
+
+  // Check for mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Calculate item width based on screen size
+  const itemWidth = isMobile ? 100 : 25; // 100% on mobile, 25% on desktop
 
   useEffect(() => {
-    // Fetch products from your API
     const fetchProducts = async () => {
       try {
         const response = await api.get("/get-product");
         const data = await response.data;
-        // Filter only trending products
         const trendingProducts = data.filter((product: Product) => product.trending);
         setProducts(trendingProducts);
       } catch (error) {
@@ -56,7 +70,7 @@ export default function TrendingCarousel() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [products]);
+  }, [products, itemWidth]);
 
   // Double the products array for infinite scroll effect
   const displayProducts = [...products, ...products];
@@ -65,12 +79,11 @@ export default function TrendingCarousel() {
     navigate(`/product/${productId}`);
   };
 
-
   return (
-    <section className="w-full py-16 px-4 md:px-6 overflow-hidden">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold mb-4">TRENDING</h2>
-        <p className="text-gray-600">
+    <section className="w-full py-8 md:py-16 px-4 md:px-6 overflow-hidden">
+      <div className="text-center mb-8 md:mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4">TRENDING</h2>
+        <p className="text-sm md:text-base text-gray-600">
           The World's Premium Brands In One Destination.
         </p>
       </div>
@@ -84,37 +97,37 @@ export default function TrendingCarousel() {
             {displayProducts.map((product, index) => (
               <div 
                 key={`${product._id}-${index}`} 
-                className="w-1/4 flex-shrink-0 px-4 cursor-pointer"
+                className={`${isMobile ? 'w-full' : 'w-1/4'} flex-shrink-0 px-2 md:px-4`}
                 onClick={() => handleProductClick(product._id)}
               >
-            <div className="flex flex-col group cursor-pointer hover:shadow-lg transition-shadow duration-300 rounded-lg overflow-hidden bg-white">
-              <div className="relative w-full pt-[100%]"> 
-                {product.images && Object.values(product.images).length > 0 && (
-                  <img 
-                    src={Object.values(product.images)[0]} 
-                    alt={`${product.name} 1`}
-                    className="absolute top-0 left-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                )}
-              </div>
-              
-              <div className="p-4 bg-white">
-                <p className="text-sm font-medium text-gray-500 mb-1">
-                  {product.brand}
-                </p>
-                <h3 className="font-semibold text-gray-800 mb-2 truncate">
-                  {product.name}
-                </h3>
-                <div className="flex justify-center items-center space-x-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    ₹{product.priceINR}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    / AED {product.priceAED}
-                  </span>
+                <div className="flex flex-col group cursor-pointer hover:shadow-lg transition-shadow duration-300 rounded-lg overflow-hidden bg-white">
+                  <div className="relative w-full pt-[100%]"> 
+                    {product.images && Object.values(product.images).length > 0 && (
+                      <img 
+                        src={Object.values(product.images)[0]} 
+                        alt={`${product.name} 1`}
+                        className="absolute top-0 left-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
+                  </div>
+                  
+                  <div className="p-3 md:p-4 bg-white">
+                    <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">
+                      {product.brand}
+                    </p>
+                    <h3 className="text-sm md:text-base font-semibold text-gray-800 mb-2 truncate">
+                      {product.name}
+                    </h3>
+                    <div className="flex justify-center items-center space-x-2">
+                      <span className="text-base md:text-lg font-bold text-gray-900">
+                        ₹{product.priceINR}
+                      </span>
+                      <span className="text-xs md:text-sm text-gray-500">
+                        / AED {product.priceAED}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
               </div>
             ))}
           </div>

@@ -21,7 +21,6 @@ const Subcategory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewStyle, setViewStyle] = useState<"grid" | "rows">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [previewCategory, setPreviewCategory] = useState<Category | null>(null);
   const navigate = useNavigate();
   const { category } = useParams();
 
@@ -53,9 +52,7 @@ const Subcategory: React.FC = () => {
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    setTimeout(() => {
-      navigate(`/products/${category}/${categoryId}`);
-    }, 400);
+    navigate(`/products/${category}/${categoryId}`);
   };
 
   const filteredCategories = categories.filter(category =>
@@ -141,7 +138,6 @@ const Subcategory: React.FC = () => {
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Loading State */}
         <AnimatePresence>
           {isLoading && (
             <motion.div 
@@ -158,7 +154,6 @@ const Subcategory: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Categories Grid/Rows */}
         {!isLoading && (
           <motion.div 
             variants={containerVariants}
@@ -177,13 +172,9 @@ const Subcategory: React.FC = () => {
                 className={`bg-white rounded-xl overflow-hidden shadow-lg ${
                   selectedCategory === category._id ? 'scale-95 opacity-50' : ''
                 }`}
+                onClick={() => handleCategoryClick(category._id)}
               >
-                <div 
-                  className="relative group cursor-pointer" 
-                  onClick={() => handleCategoryClick(category._id)}
-                  onMouseEnter={() => setPreviewCategory(category)}
-                  onMouseLeave={() => setPreviewCategory(null)}
-                >
+                <div className="relative group cursor-pointer">
                   <div className={`relative ${viewStyle === "grid" ? "h-64" : "h-48"}`}>
                     <img 
                       src={category.image} 
@@ -192,26 +183,32 @@ const Subcategory: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                   </div>
-                  <motion.div 
-                    initial={false}
-                    animate={{ y: previewCategory?._id === category._id ? 0 : "100%" }}
-                    transition={{ type: "tween" }}
-                    className="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm"
-                  >
+                  
+                  {/* Mobile Details (Always Visible) */}
+                  <div className="block md:hidden p-4 bg-white">
+                    <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                    <p className="text-gray-600 text-sm mb-2">{category.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">{category.itemCount} Items</span>
+                      <ArrowRight className="w-4 h-4 text-black" />
+                    </div>
+                  </div>
+
+                  {/* Desktop Details (Hover to Show) */}
+                  <div className="hidden md:block absolute bottom-0 left-0 right-0 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-4 bg-white/95 backdrop-blur-sm">
                     <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
                     <p className="text-gray-600 text-sm mb-2">{category.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">{category.itemCount} Items</span>
                       <ArrowRight className="w-4 h-4 text-black group-hover:translate-x-2 transition-transform" />
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
         )}
 
-        {/* Empty State */}
         {!isLoading && filteredCategories.length === 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

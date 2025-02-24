@@ -559,26 +559,30 @@ const Hero = ({ onShopNowClick = () => {} }) => {
       <TrendingCarousel />
       
       {/* Floating badge */}
-      <div className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ 
-            duration: 0.5,
-            delay: 3,
-            scale: {
-              type: "spring",
-              stiffness: 100
-            }
-          }}
-          whileHover={{ scale: 1.05 }}
-          className="w-12 md:w-16 h-12 md:h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
-        >
-          <div className="w-10 md:w-14 h-10 md:h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
-            <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform text-sm md:text-base" />
-          </div>
-        </motion.div>
-      </div>
+      <div
+  className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center"
+  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+>
+  <motion.div
+    initial={{ scale: 0.8, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    transition={{ 
+      duration: 0.5,
+      delay: 3,
+      scale: {
+        type: "spring",
+        stiffness: 100
+      }
+    }}
+    whileHover={{ scale: 1.05 }}
+    className="w-12 md:w-16 h-12 md:h-16 bg-white shadow-xl rounded-full flex items-center justify-center cursor-pointer"
+  >
+    <div className="w-10 md:w-14 h-10 md:h-14 rounded-full border-2 border-[#D4AF37] flex items-center justify-center group">
+      <RiStarFill className="text-[#D4AF37] group-hover:scale-110 transition-transform text-sm md:text-base" />
+    </div>
+  </motion.div>
+</div>
+
     </div>
   );
 };

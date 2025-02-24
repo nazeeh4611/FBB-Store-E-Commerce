@@ -15,34 +15,11 @@ interface Category {
   itemCount?: number;
 }
 
-// interface BannerSlide {
-//   title: string;
-//   image: string;
-//   description: string;
-//   accent: string;
-// }
-
-// const bannerSlides: BannerSlide[] = [
-//   {
-//     title: "Luxury Collection",
-//     image: "/images/banner1.jpg",
-//     description: "Discover our curated selection of premium attire",
-//     accent: "#D4AF37",
-//   },
-//   {
-//     title: "Artisanal Craftsmanship",
-//     image: "/images/banner2.jpg",
-//     description: "Handcrafted with precision and care",
-//     accent: "#B8860B",
-//   },
-// ];
-
 const CategoryPages: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  // const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const api = axios.create({
@@ -51,9 +28,7 @@ const CategoryPages: React.FC = () => {
 
   const getCategory = async () => {
     try {
-      // setIsLoading(true);
       const response = await api.get("/get-category");
-      // Enhance the data with mock descriptions and item counts
       const enhancedCategories = response.data.map((cat: Category) => ({
         ...cat,
         description: `Explore our exclusive ${cat.name.toLowerCase()} collection`,
@@ -62,8 +37,6 @@ const CategoryPages: React.FC = () => {
       setCategories(enhancedCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
-    } finally {
-      // setIsLoading(false);
     }
   };
 
@@ -93,21 +66,20 @@ const CategoryPages: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <NavBar />
       
-      {/* Hero Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative h-96 overflow-hidden"
       >
         <div className="absolute inset-0 bg-black">
-          <img 
-            src="/images/luxury-banner.jpg" 
+          <img
+            src="/images/luxury-banner.jpg"
             alt="Luxury Fashion"
             className="w-full h-full object-cover opacity-70"
           />
         </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <motion.h1 
+          <motion.h1
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -115,21 +87,19 @@ const CategoryPages: React.FC = () => {
           >
             ELEVATE YOUR LIFESTYLE
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="text-lg md:text-xl font-light max-w-2xl"
           >
-   Discover a curated collection of fashion, home essentials, and kitchen accessories
-             </motion.p>
+            Discover a curated collection of fashion, home essentials, and kitchen accessories
+          </motion.p>
         </div>
       </motion.div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
-        {/* Search Bar */}
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
@@ -147,7 +117,6 @@ const CategoryPages: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {displayedCategories.map((category, index) => (
             <motion.div
@@ -161,19 +130,31 @@ const CategoryPages: React.FC = () => {
                 selectedCategory === category._id ? 'scale-95 opacity-50' : ''
               }`}
             >
-              <div 
-                className="relative group cursor-pointer" 
+              <div
+                className="relative group cursor-pointer"
                 onClick={() => handleCategoryClick(category._id)}
               >
                 <div className="relative h-80">
-                  <img 
-                    src={category.image} 
+                  <img
+                    src={category.image}
                     alt={category.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/80 to-transparent">
+
+                {/* Mobile Details (Always Visible) */}
+                <div className="md:hidden absolute bottom-0 left-0 right-0 p-6 text-white bg-gradient-to-t from-black/80 to-transparent">
+                  <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
+                  <p className="text-sm opacity-90">{category.description}</p>
+                  <div className="mt-4 flex items-center text-sm">
+                    <span>{category.itemCount} Items</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </div>
+
+                {/* Desktop Details (Hover to Show) */}
+                <div className="hidden md:block absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/80 to-transparent">
                   <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
                   <p className="text-sm opacity-90">{category.description}</p>
                   <div className="mt-4 flex items-center text-sm">
@@ -186,15 +167,14 @@ const CategoryPages: React.FC = () => {
           ))}
         </div>
 
-        {/* View More Button */}
         {categories.length > 4 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
             className="flex justify-center mb-20"
           >
-            <button 
+            <button
               onClick={() => setShowAll(!showAll)}
               className="group relative overflow-hidden rounded-full px-8 py-3 bg-black text-white hover:bg-gray-900 transition-colors duration-300"
             >
@@ -206,7 +186,6 @@ const CategoryPages: React.FC = () => {
           </motion.div>
         )}
       </div>
-
       <Footer />
     </div>
   );
