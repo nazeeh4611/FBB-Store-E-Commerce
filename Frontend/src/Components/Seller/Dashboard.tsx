@@ -1,5 +1,5 @@
 import React, { useState, ReactNode, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import axios from 'axios';
 import { baseurl } from '../../Constant/Base';
@@ -7,7 +7,7 @@ import { useGetToken } from '../../Token/getToken';
 import ExtractToken from '../../Token/Extract';
 import { toast } from 'react-hot-toast';
 
-// Type definitions for card components
+
 interface CardProps {
   children: ReactNode;
   className?: string;
@@ -26,7 +26,6 @@ interface CardContentProps {
   children: ReactNode;
 }
 
-// Custom Card Components
 const Card: React.FC<CardProps> = ({ children, className = '' }) => (
   <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${className}`}>
     {children}
@@ -62,6 +61,7 @@ interface UserData {
   email: string;
   INR: string;
   DXB: string;
+  status: boolean;
 }
 
 const DashboardPage: React.FC = () => {
@@ -80,14 +80,16 @@ const DashboardPage: React.FC = () => {
     name: '',
     email: '',
     INR: '',
-    DXB: ''
+    DXB: '',
+    status: false
   });
 
   const [editForm, setEditForm] = useState<UserData>({
     name: '',
     email: '',
     INR: '',
-    DXB: ''
+    DXB: '',
+    status: false
   });
 
   const api = axios.create({
@@ -155,7 +157,8 @@ const DashboardPage: React.FC = () => {
         toast.success('Profile updated successfully');
         setUserData({
           ...editForm,
-          email: userData.email // Ensure email remains unchanged
+          email: userData.email,
+          status: userData.status
         });
         setIsEditing(false);
       }
@@ -172,14 +175,30 @@ const DashboardPage: React.FC = () => {
       
       <main className="flex-1 p-4 sm:p-8">
         <header className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            My Profile
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">Manage your account settings</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                My Profile
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-2">Manage your account settings</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {userData.status ? (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">Approved Seller</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-600">
+                  <XCircle className="h-5 w-5" />
+                  <span className="font-medium">Pending Approval</span>
+                </div>
+              )}
+            </div>
+          </div>
         </header>
 
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-          {/* Profile Information Card */}
           <Card className="w-full">
             <CardHeader>
               <div className="flex justify-between items-center">
@@ -291,7 +310,6 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Password Reset Card */}
           <Card className="w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -380,16 +398,16 @@ const DashboardPage: React.FC = () => {
                   type="submit"
                   disabled={isLoading}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
-                >
-                  {isLoading ? 'Updating Password...' : 'Update Password'}
-                </button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+                  >
+                    {isLoading ? 'Updating Password...' : 'Update Password'}
+                  </button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </main>
-    </div>
-  );
-};
-
-export default DashboardPage;
+      </div>
+    );
+  };
+  
+  export default DashboardPage;

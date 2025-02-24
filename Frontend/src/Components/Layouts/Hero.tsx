@@ -15,7 +15,7 @@ import slider12 from "../Layouts/Img/slider1 2.jpeg";
 import TrendingCarousel from "./Carousel";
 import axios from "axios";
 import { baseurl } from "../../Constant/Base";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Category {
@@ -314,10 +314,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               onClick={onShopNowClick}
               className="bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 rounded-full transition-all duration-300 text-base md:text-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4AF37] group border border-white/20 hover:border-[#D4AF37]"
             >
-              <span className="flex items-center">
+            <Link to="/category">
+            <span className="flex items-center">
                 Shop Now
                 <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
               </span>
+            </Link>
             </motion.button>
           </motion.div>
         </div>
@@ -544,10 +546,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             onClick={onShopNowClick}
             className="bg-transparent text-white hover:bg-white hover:text-black px-6 md:px-8 py-2 md:py-3 border border-white hover:border-[#D4AF37] rounded-sm transition-all duration-300 text-sm md:text-lg font-medium group"
           >
+            <Link to="/shop">
             <span className="flex items-center">
               SHOP NOW
               <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
             </span>
+            </Link>
           </motion.button>
         </div>
         

@@ -5,6 +5,7 @@ import { baseurl } from '../../Constant/Base';
 import axios from "axios";
 import ExtractToken from '../../Token/Extract';
 import { useGetToken } from '../../Token/getToken';
+import { toast } from 'react-hot-toast'; 
 
 interface Category {
   _id: string;
@@ -27,6 +28,10 @@ interface Product {
   createdAt: string;
   updatedAt: string;
   trending: boolean;
+}
+interface Seller {
+  name: string;
+  status: boolean;
 }
 
 interface ProductFormData {
@@ -71,7 +76,7 @@ const SellerProductPage = () => {
   const api = axios.create({
     baseURL: baseurl,
   });
-    const [seller,setSeller] = useState("")
+  const [seller, setSeller] = useState<Seller>({ name: "", status: false });
 
 
 
@@ -81,20 +86,28 @@ const SellerProductPage = () => {
   const sellerId = ExtractToken(token)
 
 
-  const getSeller = async()=>{
+  const getSeller = async () => {
     try {
-        const response = await api.get(`/admin/get-seller/${sellerId.userId}`)
-        console.log(response)
-        setSeller(response.data.name)
+      const response = await api.get(`/admin/get-seller/${sellerId.userId}`);
+      setSeller({
+        name: response.data.name,
+        status: response.data.status // Make sure your API returns status
+      });
     } catch (error) {
-        
+      console.error('Error fetching seller:', error);
+      toast.error('Failed to fetch seller information');
     }
-}
+  };
 
-useEffect(()=>{
-    getSeller()
-},[])
 
+
+const handleAddNewClick = () => {
+  if (!seller.status) {
+    toast.error('Your account is pending approval. Please contact admin for more information.');
+    return;
+  }
+  setIsModalOpen(true);
+};
 
 //   const email = ExtractToken(token)
 
@@ -221,6 +234,10 @@ useEffect(()=>{
   };
 
   const handleEdit = (product: Product) => {
+    if (!seller.status) {
+      toast.error('Your account is pending approval. Please contact admin for more information.');
+      return;
+    }
     setEditingProduct(product._id);
     
     const imageArray = Array.isArray(product.images) 
@@ -235,7 +252,7 @@ useEffect(()=>{
       priceINR: product.priceINR.toString(),
       priceAED: product.priceAED.toString(),
       images: [null, null, null, null],
-      existingImages: imageArray as string[], 
+      existingImages: imageArray as string[],
       isTrending: product.trending
     });
       
@@ -257,6 +274,10 @@ useEffect(()=>{
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!seller.status) {
+      toast.error('Your account is pending approval. Please contact admin for more information.');
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -384,6 +405,7 @@ useEffect(()=>{
   };
 
   useEffect(() => {
+    getSeller();
     getProducts();
     getCategories();
     getSubCategories();
@@ -391,15 +413,21 @@ useEffect(()=>{
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Sidebar />
-      
-      <main className="flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Welcome, <span className="text-blue-600">{seller}</span>
-          </h1>
-          <p className="text-gray-600 mt-2">Manage your products</p>
-        </header>
+    <Sidebar />
+    
+    <main className="flex-1 p-8">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">
+          Welcome, <span className="text-blue-600">{seller.name}</span>
+        </h1>
+        <p className="text-gray-600 mt-2">Manage your products</p>
+        
+        {!seller.status && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+            Your account is pending approval from admin. You can view your products but cannot add or edit them.
+          </div>
+        )}
+      </header>
   
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 flex flex-col md:flex-row justify-between items-center border-b border-gray-100">
@@ -418,12 +446,17 @@ useEffect(()=>{
               </div>
               
               <button 
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <PlusCircle size={20} />
-                <span>Add Product</span>
-              </button>
+          onClick={handleAddNewClick}
+          className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors shadow-sm ${
+            seller.status 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+          disabled={!seller.status}
+        >
+          <PlusCircle size={20} />
+          <span>Add Product</span>
+        </button>
             </div>
           </div>
   
@@ -821,3 +854,5 @@ useEffect(()=>{
 };
 
 export default SellerProductPage;
+
+
