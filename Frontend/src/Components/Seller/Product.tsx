@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight,Trash2 } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight,Trash2, Menu, LogOut } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -74,6 +74,8 @@ const SellerProductPage = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   const api = axios.create({
     baseURL: baseurl,
@@ -397,6 +399,17 @@ const handleAddNewClick = () => {
     );
   };
 
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleLogout = () => {
+    // Add your logout logic here
+    localStorage.removeItem("sellerToken");
+    window.location.href = "/login";
+  };
+  
   useEffect(() => {
     getSeller();
     getProducts();
@@ -406,10 +419,43 @@ const handleAddNewClick = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-    <Sidebar />
-    
-    <main className="flex-1 p-8">
-      <header className="mb-8">
+     <div className="md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
+        <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-100">
+          <Menu size={24} />
+        </button>
+        
+        <h1 className="text-xl font-bold text-gray-800">Manage Products</h1>
+        
+        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-gray-100 text-red-600">
+          <LogOut size={24} />
+        </button>
+      </div>
+
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity md:hidden ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={toggleSidebar}
+      ></div>
+
+      <div
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex justify-between items-center p-4 md:hidden">
+          <h2 className="text-xl font-bold text-gray-800">Menu</h2>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <Sidebar />
+      </div>
+          
+      <main className="flex-1 p-4 sm:p-8 mt-16 md:mt-0">
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome, <span className="text-blue-600">{seller.name}</span>
         </h1>
@@ -420,9 +466,8 @@ const handleAddNewClick = () => {
             Your account is pending approval from admin. You can view your products but cannot add or edit them.
           </div>
         )}
-      </header>
-  
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+       
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 flex flex-col md:flex-row justify-between items-center border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">Products</h2>
             

@@ -1,5 +1,5 @@
 import React, { useState, ReactNode, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle, XCircle, Menu, X, LogOut } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import axios from 'axios';
 import { baseurl } from '../../Constant/Base';
@@ -70,6 +70,8 @@ const DashboardPage: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
     currentPassword: '',
     newPassword: '',
@@ -169,12 +171,56 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleLogout = () => {
+    // Add your logout logic here
+    localStorage.removeItem("sellerToken");
+    window.location.href = "/login";
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Sidebar />
+      <div className="md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
+        <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-100">
+          <Menu size={24} />
+        </button>
+        
+        <h1 className="text-xl font-bold text-gray-800">My Profile</h1>
+        
+        <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-gray-100 text-red-600">
+          <LogOut size={24} />
+        </button>
+      </div>
+
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity md:hidden ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={toggleSidebar}
+      ></div>
+
+      <div
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex justify-between items-center p-4 md:hidden">
+          <h2 className="text-xl font-bold text-gray-800">Menu</h2>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <Sidebar />
+      </div>
       
-      <main className="flex-1 p-4 sm:p-8">
-        <header className="mb-6 sm:mb-8">
+      <main className="flex-1 p-4 sm:p-8 mt-16 md:mt-0">
+        <header className="mb-6 sm:mb-8 hidden md:block">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
@@ -182,7 +228,33 @@ const DashboardPage: React.FC = () => {
               </h1>
               <p className="text-sm sm:text-base text-gray-600 mt-2">Manage your account settings</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              {userData.status ? (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">Approved Seller</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-600">
+                  <XCircle className="h-5 w-5" />
+                  <span className="font-medium">Pending Approval</span>
+                </div>
+              )}
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-gray-100"
+              >
+                <LogOut size={20} />
+                <span className="font-medium">Logout</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="md:hidden mb-6">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-600">Manage your account settings</p>
+            <div>
               {userData.status ? (
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="h-5 w-5" />
@@ -196,7 +268,7 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
           </div>
-        </header>
+        </div>
 
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <Card className="w-full">
@@ -398,16 +470,16 @@ const DashboardPage: React.FC = () => {
                   type="submit"
                   disabled={isLoading}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
-                  >
-                    {isLoading ? 'Updating Password...' : 'Update Password'}
-                  </button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
-  };
-  
-  export default DashboardPage;
+                >
+                  {isLoading ? 'Updating Password...' : 'Update Password'}
+                </button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default DashboardPage;

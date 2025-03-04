@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, Phone, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { Mail, Phone, ChevronLeft, ChevronRight, Package, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
@@ -88,6 +88,8 @@ const SellerPage = () => {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const itemsPerPage = 10;
 
   const api = axios.create({
@@ -146,9 +148,47 @@ const SellerPage = () => {
     setCurrentPage(page);
   };
 
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Sidebar />
+           <div className={`md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center`}>
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
+        <div className="w-10"></div>
+      </div>
+
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity md:hidden ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={toggleSidebar}
+      ></div>
+
+      <div
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex justify-between items-center p-4 md:hidden">
+          <h2 className="text-xl font-bold text-gray-800">Menu</h2>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <Sidebar />
+      </div>
       
       <main className="flex-1 p-8">
         <header className="mb-8">
