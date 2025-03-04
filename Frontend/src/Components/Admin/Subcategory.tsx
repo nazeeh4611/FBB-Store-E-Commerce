@@ -198,7 +198,6 @@ const SubCategory = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-       <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
            <div className={`md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center`}>
         <button
           onClick={toggleSidebar}
@@ -233,13 +232,12 @@ const SubCategory = () => {
         </div>
         <Sidebar />
       </div>
-      
-      <main className="flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+      <main className="flex-1 p-4 md:p-8 mt-16 md:mt-0">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
             Welcome, <span className="text-blue-600">Admin</span>
           </h1>
-          <p className="text-gray-600 mt-2">Manage your product subcategories</p>
+          <p className="text-gray-600 mt-2">Manage your products</p>
         </header>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -498,7 +496,6 @@ const SubCategory = () => {
           </div>
         )}
       </main>
-    </div>
     </div>
   );
 };

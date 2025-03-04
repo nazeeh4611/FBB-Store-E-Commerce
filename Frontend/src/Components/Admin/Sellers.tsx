@@ -190,12 +190,12 @@ const SellerPage = () => {
         <Sidebar />
       </div>
       
-      <main className="flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+      <main className="flex-1 p-4 md:p-8 mt-16 md:mt-0">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
             Welcome, <span className="text-blue-600">Admin</span>
           </h1>
-          <p className="text-gray-600 mt-2">Seller List</p>
+          <p className="text-gray-600 mt-2">Manage your products</p>
         </header>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
