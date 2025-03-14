@@ -28,6 +28,19 @@ const s3Client = new S3Client({
 //   }),
 // });
 
+const profileImageUpload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: "product-fbb",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: function (req, file, cb) {
+      const fileName = `profile-${Date.now()}-${file.originalname}`;
+      cb(null, fileName);
+    },
+  }),
+});
+
+
 const productUpload = multer({
   storage: multerS3({
     s3: s3Client,
@@ -84,9 +97,10 @@ SellerRouter.post("/add-product", productUpload.fields([
   SellerRouter.put("/edit-product/:id", handleProductImages, updateProduct);
 
   SellerRouter.post('/reset-password/:userId', resetPassword);
-  SellerRouter.put('/update-profile/:userId', updateProfile);
+  SellerRouter.put('/update-profile/:userId', profileImageUpload.single('profileImage'), updateProfile);
   SellerRouter.delete("/delete-product/:id",deleteProduct)
 
 
 
 export default SellerRouter;
+

@@ -11,7 +11,7 @@ interface Category {
   image: string;
   createdAt: string;
   updatedAt: string;
-  status?: 'LISTED' | 'UNLISTED';
+  // status?: 'LISTED' | 'UNLISTED';
 }
 
 interface SubCategory extends Category {
@@ -281,7 +281,7 @@ const SubCategory = () => {
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Parent Category</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Image</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Created At</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th>
+                  {/* <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th> */}
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -305,7 +305,7 @@ const SubCategory = () => {
                     <td className="py-4 px-4 text-gray-600">
                       {new Date(subCategory.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-4">
+                    {/* <td className="py-4 px-4">
                       <span
                         className={`px-4 py-1.5 rounded-full text-sm font-medium ${
                           subCategory.status === 'LISTED'
@@ -315,7 +315,7 @@ const SubCategory = () => {
                       >
                         {subCategory.status || 'UNLISTED'}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="py-4 px-4">
                       <button
                         onClick={() => handleEdit(subCategory)}

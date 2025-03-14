@@ -5,7 +5,6 @@ import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
 
-// Types
 interface Seller {
   _id: string;
   name: string;
@@ -13,6 +12,7 @@ interface Seller {
   phone: string;
   createdAt: string;
   status: boolean;
+  Image?: string;
 }
 
 interface PaginationProps {
@@ -119,7 +119,6 @@ const SellerPage = () => {
       });
       
       if (response.data.success) {
-        // Fetch fresh data after update
         await getSellers();
       }
     } catch (error) {
@@ -138,7 +137,6 @@ const SellerPage = () => {
     getSellers();
   }, []);
 
-  // Pagination calculations
   const totalPages = Math.ceil(sellers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -148,14 +146,22 @@ const SellerPage = () => {
     setCurrentPage(page);
   };
 
-
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-           <div className={`md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center`}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-10 bg-white p-4 shadow-md flex justify-between items-center">
         <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -207,10 +213,11 @@ const SellerPage = () => {
             <table className="w-full">
               <thead>
                 <tr className="text-left border-b border-gray-100">
+                  <th className="pb-4 px-4 text-gray-600 font-semibold">Profile</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Seller Name</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Email</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold hidden md:table-cell">Email</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Phone</th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Created At</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold hidden md:table-cell">Created At</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Status</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
@@ -221,27 +228,40 @@ const SellerPage = () => {
                     key={seller._id}
                     className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                   >
+                    <td className="py-4 px-4">
+                      {seller.Image ? (
+                        <img 
+                          src={seller.Image} 
+                          alt={`${seller.name}'s profile`}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium">
+                          {getInitials(seller.name)}
+                        </div>
+                      )}
+                    </td>
                     <td className="py-4 px-4 text-gray-800">{seller.name}</td>
-                    <td className="py-4 px-4 text-gray-600">
+                    <td className="py-4 px-4 text-gray-600 hidden md:table-cell">
                       <div className="flex items-center space-x-2">
                         <Mail size={16} />
-                        <span>{seller.email}</span>
+                        <span className="truncate max-w-[150px] lg:max-w-none">{seller.email}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-gray-600">
                       <div className="flex items-center space-x-2">
                         <Phone size={16} />
-                        <span>{seller.phone}</span>
+                        <span className="truncate max-w-[100px] sm:max-w-[150px] lg:max-w-none">{seller.phone}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-600">
+                    <td className="py-4 px-4 text-gray-600 hidden md:table-cell">
                       {new Date(seller.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-4">
                       <button
                         onClick={() => toggleSellerStatus(seller._id, seller.status)}
                         disabled={loadingStates[seller._id]}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                        className={`px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 ${
                           seller.status
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
@@ -253,10 +273,11 @@ const SellerPage = () => {
                     <td className="py-4 px-4">
                       <button
                         onClick={() => handleViewProducts(seller._id)}
-                        className="flex items-center space-x-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                        className="flex items-center space-x-1 md:space-x-2 px-2 py-1 md:px-4 md:py-1.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors text-xs md:text-sm"
                       >
                         <Package size={16} />
-                        <span>View Products</span>
+                        <span className="hidden sm:inline">View Products</span>
+                        <span className="sm:hidden">Products</span>
                       </button>
                     </td>
                   </tr>

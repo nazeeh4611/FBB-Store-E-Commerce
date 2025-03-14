@@ -314,31 +314,33 @@ export const SignUp = async(req,res)=>{
 
   export const updateProfile = async (req, res) => {
     try {
-      console.log(req.body,"may")
+      console.log(req.body, "may");
       const { INR, email, DXB } = req.body;
+      
+      const image = req.file?.location;
+      console.log(image, "imaeggege");
   
       if (!email) {
         return res.status(400).json({ message: "User ID is required" });
       }
-  
+      
       const updateFields = {};
       if (INR) updateFields.INR = INR;
       if (DXB) updateFields.DXB = DXB;
-  
-      console.log(updateFields,"ll;l;;;l")
+      if (image) updateFields.Image = image; 
+      
       const updatedSeller = await SellerModel.findOneAndUpdate(
-        {email:email},
-        { $set: updateFields },
-        { new: true, runValidators: true } 
+        { email: email },
+        { $set: updateFields }, 
+        { new: true, runValidators: true }
       );
-
-      console.log(updatedSeller,"OPPPP")
   
+      console.log(updatedSeller, "OPPPP");
+      
       if (!updatedSeller) {
         return res.status(404).json({ message: "Seller not found" });
       }
-
-  
+      
       res.status(200).json({ message: "Profile updated successfully", updatedSeller });
     } catch (error) {
       res.status(500).json({ message: "Server error", error: error.message });

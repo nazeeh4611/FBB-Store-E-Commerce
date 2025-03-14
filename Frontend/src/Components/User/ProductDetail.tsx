@@ -27,13 +27,14 @@ interface ProductData {
   images: ProductImages
   createdAt: string
   updatedAt: string
-  seller:Seller
+  seller: Seller
 }
 
-interface Seller{
-  name:string,
-  DXB:string,
-  INR:string
+interface Seller {
+  name: string,
+  DXB: string,
+  INR: string,
+  Image: string
 }
 
 interface Category {
@@ -114,15 +115,15 @@ const ImageMagnifier = ({ images, currentImage, productName }: ImageMagnifierPro
               top: `${Math.min(Math.max(position.y, 16), 84)}%`,
             }}
           >
-      <div
-  className="absolute w-[1600%] h-[1600%]" // Extreme Zoom Factor
-  style={{
-    transform: `translate(-${position.x * 16}%, -${position.y * 16}%)`, // Ultra Precise
-    transformOrigin: 'top left',
-  }}
->
-
-
+            <div
+              className="absolute w-full h-full scale-16"
+              style={{
+                transform: `translate(-${position.x * 16}%, -${position.y * 16}%)`,
+                transformOrigin: 'top left',
+                width: '1600%',
+                height: '1600%'
+              }}
+            >
               <img
                 src={images[currentImage] || "/placeholder.svg"}
                 alt={productName}
@@ -145,7 +146,7 @@ const RelatedProductCard = ({ product }: { product: RelatedProduct }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
-      className="group relative bg-white rounded-lg overflow-hidden"
+      className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
     >
       <div className="aspect-[3/4] w-full overflow-hidden">
         <img
@@ -202,7 +203,6 @@ export default function ProductPage() {
     try {
       setLoading(true)
       const response = await api.get(`/get-product/${id}`)
-      console.log(response.data)
       setProductData(response.data)
     } catch (error) {
       console.error("Error fetching product:", error)
@@ -400,7 +400,7 @@ I'm interested in this product. Could you please provide more information?`)
         >
           <div className="w-full lg:w-[500px] mx-auto">
             <div className="relative group mb-4">
-              <ImageMagnifier 
+            <ImageMagnifier 
                 images={productImages}
                 currentImage={currentImage}
                 productName={`${productData.brand} ${productData.name}`}
@@ -408,7 +408,7 @@ I'm interested in this product. Could you please provide more information?`)
               
               {productImages.length > 1 && (
                 <>
-               <motion.button
+                  <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setCurrentImage((prev) => (prev - 1 + productImages.length) % productImages.length)}
@@ -428,7 +428,6 @@ I'm interested in this product. Could you please provide more information?`)
               )}
             </div>
 
-            {/* Thumbnail Gallery */}
             <div className="w-full grid grid-cols-4 gap-2">
               {productImages.map((img, index) => (
                 <motion.button
@@ -455,7 +454,6 @@ I'm interested in this product. Could you please provide more information?`)
             </div>
           </div>
 
-          {/* Product Info */}
           <div className="flex-1 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -540,7 +538,6 @@ I'm interested in this product. Could you please provide more information?`)
               </div>
             </motion.div>
 
-            {/* Features Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -585,34 +582,50 @@ I'm interested in this product. Could you please provide more information?`)
               </div>
             </motion.div>
 
-            {/* Product Details */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.6 }}
-              className="space-y-3 pt-6 border-t"
+              className="space-y-4 pt-6 border-t"
             >
-               <div className="flex gap-2">
-                <span className="font-semibold text-gray-700">Seller:</span>
-                <span className="text-gray-600">{productData.seller.name}</span>
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <div className="relative w-12 h-12 overflow-hidden rounded-full border-2 border-white shadow-md flex-shrink-0">
+                  <img 
+                    src={productData.seller.Image || "/placeholder-avatar.svg"} 
+                    alt={productData.seller.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/placeholder-avatar.svg";
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">{productData.seller.name}</h4>
+                    <span className="bg-green-50 text-green-600 text-xs px-2 py-0.5 rounded-full">Verified Seller</span>
+                  </div>
+                  <p className="text-sm text-gray-600">Premium brand authorized retailer</p>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <span className="font-semibold text-gray-700">CATEGORY:</span>
-                <span className="text-gray-600">{productData.subCategoryId.name}</span>
-              </div>
-              <div className="flex gap-2">
-                <span className="font-semibold text-gray-700">BRAND:</span>
-                <span className="text-gray-600">{productData.brand}</span>
-              </div>
-              <div className="flex gap-2">
-                <span className="font-semibold text-gray-700">SKU:</span>
-                <span className="text-gray-600">{productData._id.substring(0, 8).toUpperCase()}</span>
+
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-700">CATEGORY:</span>
+                  <span className="text-gray-600">{productData.subCategoryId.name}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-700">BRAND:</span>
+                  <span className="text-gray-600">{productData.brand}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-700">SKU:</span>
+                  <span className="text-gray-600">{productData._id.substring(0, 8).toUpperCase()}</span>
+                </div>
               </div>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* Related Products Section */}
         {relatedProducts.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -637,5 +650,5 @@ I'm interested in this product. Could you please provide more information?`)
 
       <Footer />
     </div>
- )
+  )
 }

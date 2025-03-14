@@ -95,7 +95,7 @@ const SellerProductPage = () => {
       const response = await api.get(`/admin/get-seller/${sellerId.userId}`);
       setSeller({
         name: response.data.name,
-        status: response.data.status // Make sure your API returns status
+        status: response.data.status 
       });
     } catch (error) {
       console.error('Error fetching seller:', error);
@@ -115,11 +115,13 @@ const SellerProductPage = () => {
 
   const handleDelete = async () => {
     if (!productToDelete) return;
-
+  
     try {
       await api.delete(`/seller/delete-product/${productToDelete}`);
       toast.success('Product deleted successfully');
-      await getProducts();
+      
+      setProducts(prevProducts => prevProducts.filter(product => product._id !== productToDelete));
+      
       setDeleteModalOpen(false);
       setProductToDelete(null);
     } catch (error) {
@@ -127,7 +129,6 @@ const SellerProductPage = () => {
       toast.error('Failed to delete product');
     }
   };
-
 
 const handleAddNewClick = () => {
   if (!seller.status) {

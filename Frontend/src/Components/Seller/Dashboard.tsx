@@ -1,12 +1,11 @@
 import React, { useState, ReactNode, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle, XCircle, Menu, X, LogOut } from 'lucide-react';
+import { User, Phone, Lock, Eye, EyeOff, CheckCircle, XCircle, Menu, X, LogOut, Upload, Edit2 } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import axios from 'axios';
 import { baseurl } from '../../Constant/Base';
 import { useGetToken } from '../../Token/getToken';
 import ExtractToken from '../../Token/Extract';
 import { toast } from 'react-hot-toast';
-
 
 interface CardProps {
   children: ReactNode;
@@ -62,6 +61,7 @@ interface UserData {
   INR: string;
   DXB: string;
   status: boolean;
+  Image?: string;
 }
 
 const DashboardPage: React.FC = () => {
@@ -71,6 +71,8 @@ const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [Image, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>('');
 
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
     currentPassword: '',
@@ -83,7 +85,8 @@ const DashboardPage: React.FC = () => {
     email: '',
     INR: '',
     DXB: '',
-    status: false
+    status: false,
+    Image: ''
   });
 
   const [editForm, setEditForm] = useState<UserData>({
@@ -91,7 +94,8 @@ const DashboardPage: React.FC = () => {
     email: '',
     INR: '',
     DXB: '',
-    status: false
+    status: false,
+    Image: ''
   });
 
   const api = axios.create({
@@ -106,6 +110,9 @@ const DashboardPage: React.FC = () => {
       const response = await api.get(`/admin/get-seller/${sellerId.userId}`);
       setUserData(response.data);
       setEditForm(response.data);
+      if (response.data.Image) {
+        setProfileImagePreview(response.data.Image);
+      }
     } catch (error) {
       toast.error('Failed to fetch user data');
     }
@@ -148,11 +155,20 @@ const DashboardPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await api.put(`/seller/update-profile/${sellerId.userId}`, {
-        name: editForm.name,
-        email: editForm.email,
-        INR: editForm.INR,
-        DXB: editForm.DXB
+      const formData = new FormData();
+      formData.append('name', editForm.name);
+      formData.append('email', editForm.email);
+      formData.append('INR', editForm.INR);
+      formData.append('DXB', editForm.DXB);
+      
+      if (Image) {
+        formData.append('profileImage', Image);
+      }
+      
+      const response = await api.put(`/seller/update-profile/${sellerId.userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       
       if (response.data) {
@@ -160,9 +176,14 @@ const DashboardPage: React.FC = () => {
         setUserData({
           ...editForm,
           email: userData.email,
-          status: userData.status
+          status: userData.status,
+          Image: response.data.Image || userData.Image
         });
+        if (response.data.Image) {
+          setProfileImagePreview(response.data.Image);
+        }
         setIsEditing(false);
+        setProfileImage(null);
       }
     } catch (error) {
       toast.error('Failed to update profile');
@@ -171,12 +192,23 @@ const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
     localStorage.removeItem("sellerToken");
     window.location.href = "/login";
   };
@@ -219,7 +251,7 @@ const DashboardPage: React.FC = () => {
         <Sidebar />
       </div>
       
-      <main className="flex-1 p-4 sm:p-8 mt-16 md:mt-0">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 mt-16 md:mt-0">
         <header className="mb-6 sm:mb-8 hidden md:block">
           <div className="flex justify-between items-center">
             <div>
@@ -280,88 +312,123 @@ const DashboardPage: React.FC = () => {
                 </CardTitle>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="text-blue-600 hover:text-blue-700 text-sm sm:text-base"
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm sm:text-base"
                 >
-                  {isEditing ? 'Cancel' : 'Edit'}
+                  {isEditing ? 'Cancel' : <><Edit2 size={16} /> Edit</>}
                 </button>
               </div>
             </CardHeader>
             <CardContent>
               {isEditing ? (
                 <form onSubmit={handleProfileUpdate} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
-                      required
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="relative group mx-auto sm:mx-0">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+                        {profileImagePreview ? (
+                          <img 
+                            src={profileImagePreview} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full bg-gray-100 text-gray-400">
+                            <User size={48} />
+                          </div>
+                        )}
+                      </div>
+                      <label className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+                        <Upload size={16} />
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageChange}
+                          className="hidden" 
+                        />
+                      </label>
+                    </div>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email (Read Only)
+                        </label>
+                        <input
+                          type="email"
+                          value={userData.email}
+                          className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                          readOnly
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email (Read Only)
-                    </label>
-                    <input
-                      type="email"
-                      value={userData.email}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                      readOnly
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Indian Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={editForm.INR}
-                      onChange={(e) => setEditForm({ ...editForm, INR: e.target.value })}
-                      placeholder="+91"
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dubai Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={editForm.DXB}
-                      onChange={(e) => setEditForm({ ...editForm, DXB: e.target.value })}
-                      placeholder="+971"
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
-                    />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Indian Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={editForm.INR}
+                        onChange={(e) => setEditForm({ ...editForm, INR: e.target.value })}
+                        placeholder="+91"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Dubai Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={editForm.DXB}
+                        onChange={(e) => setEditForm({ ...editForm, DXB: e.target.value })}
+                        placeholder="+971"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
                   </div>
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
+                    className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm sm:text-base"
                   >
                     {isLoading ? 'Updating Profile...' : 'Update Profile'}
                   </button>
                 </form>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                    <User className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-500">Name</p>
-                      <p className="font-medium truncate">{userData.name}</p>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+                      {profileImagePreview ? (
+                        <img 
+                          src={profileImagePreview} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full bg-gray-100 text-gray-400">
+                          <User size={40} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-xl font-semibold text-gray-800">{userData.name}</h3>
+                      <p className="text-gray-500 mt-1">{userData.email}</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                    <Mail className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium truncate">{userData.email}</p>
-                    </div>
-                  </div>
-
+  
                   <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                     <Phone className="h-5 w-5 text-gray-500 flex-shrink-0" />
                     <div className="min-w-0">
@@ -369,7 +436,7 @@ const DashboardPage: React.FC = () => {
                       <p className="font-medium truncate">{userData.INR || 'Not set'}</p>
                     </div>
                   </div>
-
+  
                   <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                     <Phone className="h-5 w-5 text-gray-500 flex-shrink-0" />
                     <div className="min-w-0">
@@ -381,7 +448,7 @@ const DashboardPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
-
+  
           <Card className="w-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -392,7 +459,7 @@ const DashboardPage: React.FC = () => {
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Current Password
                   </label>
                   <div className="relative">
@@ -417,7 +484,7 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     New Password
                   </label>
                   <div className="relative">
@@ -442,7 +509,7 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Confirm New Password
                   </label>
                   <div className="relative">

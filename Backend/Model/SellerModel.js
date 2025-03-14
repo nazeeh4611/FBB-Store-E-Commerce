@@ -33,6 +33,9 @@ const SellerSchema = new mongoose.Schema(
       },
       DXB:{
         type:String
+      },
+      Image:{
+        type:String
       }
     },
     { timestamps: true }
