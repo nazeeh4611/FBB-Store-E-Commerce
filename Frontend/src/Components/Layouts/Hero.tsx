@@ -16,11 +16,7 @@ import { baseurl } from "../../Constant/Base";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-// interface Category {
-//   name: string,
-//   image: string,
-//   _id: string
-// }
+// 
 
 interface Seller {
   _id: string,
