@@ -8,7 +8,7 @@ import FilterProduct from "../Components/User/FilterProduct";
 import Subcategory from "../Components/User/SubCategory";
 import Types from "../Components/User/Types";
 import AboutPage from "../Components/Layouts/About";
-
+import SellerPages from "../Components/User/Sellers";
 
 const User: React.FC = () => {
     return (
@@ -19,11 +19,13 @@ const User: React.FC = () => {
           <Route path="/product" element={<ProductPage/>} />
           <Route path="/product/:id" element={<ProductPage/>}/>
           <Route path="/category" element={<CategoryPages/>}/>
-          <Route path="/category/:category" element={<Subcategory/>}/>
+          <Route path="/seller-list/:seller/category/:category" element={<Subcategory/>}/>
           <Route path="/product-type/:category" element={<Types/>}/>
-          <Route path="/products/:category/:id" element={<FilterProduct/>}/>
+          <Route path="/products/:seller/:category/:id" element={<FilterProduct/>}/>
           <Route path="/about" element={<AboutPage/>}/>
-          </Routes>
+          <Route path="/seller-list" element={<SellerPages/>}/>
+          <Route path="/seller-list/:id" element={<CategoryPages/>}/>
+       </Routes>
       </>
     );
   };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { baseurl } from "../../Constant/Base";
 import NavBar from "../Layouts/Navbar";
 import Footer from "../Layouts/Footer";
@@ -26,9 +26,12 @@ const CategoryPages: React.FC = () => {
     baseURL: baseurl
   });
 
+  const {id} = useParams()
+  console.log(id,"the id will be here")
+
   const getCategory = async () => {
     try {
-      const response = await api.get("/get-category");
+      const response = await api.get(`/get-category/${id}`);
       const enhancedCategories = response.data.map((cat: Category) => ({
         ...cat,
         description: `Explore our exclusive ${cat.name.toLowerCase()} collection`,
@@ -53,7 +56,7 @@ const CategoryPages: React.FC = () => {
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setTimeout(() => {
-      navigate(`/category/${categoryId}`);
+      navigate(`/seller-list/${id}/category/${categoryId}/`);
     }, 300);
   };
 

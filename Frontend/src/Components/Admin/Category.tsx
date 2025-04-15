@@ -144,7 +144,7 @@ const CategoryPage = () => {
 
       if (isEditMode && selectedCategory) {
         formDataToSend.append('categoryId', selectedCategory._id);
-        await api.put("/admin/update-category", formDataToSend);
+        await api.put("/admin/edit-category", formDataToSend);
       } else {
         await api.post("/admin/add-category", formDataToSend);
       }

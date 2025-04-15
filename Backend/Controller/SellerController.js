@@ -149,6 +149,11 @@ export const SignUp = async(req,res)=>{
   
       // Save to database
       const product = await productModel.create(productData);
+
+      await SellerModel.findByIdAndUpdate(product.seller, {
+        $addToSet: { categories: productData.categoryId }
+      });
+      
   
       res.status(201).json({
         success: true,

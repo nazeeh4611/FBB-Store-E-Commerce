@@ -1,5 +1,5 @@
 import express from "express";
-import { addCategory, getCategory, addSubcategory, getSubCategory, updateTrending, SignUp, login, editCategory, getSellers, updateStatus, getSellerProduct, sellerByid, getProducts } from "../Controller/AdminController.js";
+import { addCategory, getCategory, addSubcategory, getSubCategory, updateTrending, SignUp, login, editCategory, getSellers, updateStatus, getSellerProduct, sellerByid, getProducts, editSubcategory } from "../Controller/AdminController.js";
 import multer from "multer";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
@@ -60,6 +60,7 @@ adminRouter.put("/update-trending/:id", updateTrending);
 adminRouter.post("/register",SignUp)
 adminRouter.post("/login",login)
 adminRouter.put("/edit-category",categoryUpload.single('image'),editCategory)
+adminRouter.put("/edit-subcategory/:id",categoryUpload.single('image'),editSubcategory)
 adminRouter.get("/get-sellers",getSellers)
 adminRouter.put("/update-status/:id",updateStatus)
 adminRouter.get("/get-products/:id",getSellerProduct)

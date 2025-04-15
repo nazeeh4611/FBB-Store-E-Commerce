@@ -87,7 +87,7 @@ export default function FilterProduct() {
     brands: [],
     sortBy: 'newest'
   })
-  const {category, id} = useParams()
+  const {category, id,seller} = useParams()
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('favorites')
@@ -154,7 +154,7 @@ export default function FilterProduct() {
   const getProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await api.get(`/get-related/${id}`)
+      const response = await api.get(`/get-related/${seller}/${id}`)
       if (response.data && Array.isArray(response.data)) {
         const productsWithMockData = response.data.map((product: Product) => ({
           ...product,

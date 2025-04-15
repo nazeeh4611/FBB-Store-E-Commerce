@@ -78,7 +78,7 @@ const SubCategory = () => {
 
       if (isEditing && currentSubCategoryId) {
         formDataToSend.append('subCategoryId', currentSubCategoryId);
-        await api.put(`/admin/update-subcategory/${currentSubCategoryId}`, formDataToSend);
+        await api.put(`/admin/edit-subcategory/${currentSubCategoryId}`, formDataToSend);
       } else {
         await api.post("/admin/add-subcategory", formDataToSend);
       }

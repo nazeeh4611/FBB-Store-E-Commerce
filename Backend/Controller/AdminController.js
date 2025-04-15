@@ -87,6 +87,8 @@ export const getSubCategory = async (req, res) => {
 
 
 
+
+
 export const updateTrending = async (req, res) => {
   try {
     const id = req.params.id;
@@ -190,6 +192,7 @@ export const editCategory = async(req,res)=>{
     const image = req.file?.location;
    const {name,categoryId} = req.body
 
+   console.log(image,name,categoryId,"this be the datas")
    const response = await categoryModel.updateOne(
     {_id:categoryId},
     {name:name,image:image}
@@ -202,6 +205,24 @@ export const editCategory = async(req,res)=>{
   }
 }
 
+
+export const editSubcategory = async(req,res)=>{
+  try {
+
+    console.log("mayy hereeee")
+    const image = req.file?.location
+    const {name,categoryId} = req.body
+    const id = req.params.id
+    const response = await subcategoryModel.updateOne(
+      {_id:id},
+      {name:name,image:image}
+    )
+
+    res.status(200).json(response)
+  } catch (error) {
+    res.status(500).json("Internal server error")
+  }
+}
 
 export const getSellers = async(req,res)=>{
   try {

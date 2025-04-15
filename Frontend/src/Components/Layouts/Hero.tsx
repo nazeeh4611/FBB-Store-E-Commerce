@@ -16,18 +16,28 @@ import { baseurl } from "../../Constant/Base";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-interface Category {
+// interface Category {
+//   name: string,
+//   image: string,
+//   _id: string
+// }
+
+interface Seller {
+  _id: string,
   name: string,
-  image: string,
-  _id: string
+  Image: string,
+  categories: string[],
+  email: string,
+  phone: string
 }
 
 const Hero = ({ onShopNowClick = () => {} }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [isHovering, setIsHovering] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSellers, setLoadingSellers] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -41,7 +51,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     baseURL: baseurl
   });
 
-  // Check for mobile screen
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -53,7 +62,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Welcome overlay effect
   useEffect(() => {
     if (showWelcome) {
       const timer = setTimeout(() => {
@@ -91,7 +99,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     deleteSpeed: 50
   });
 
-  // Autoplay for hero slider with pause on hover
   useEffect(() => {
     if (isHovering) return;
     
@@ -102,41 +109,55 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     return () => clearInterval(timer);
   }, [isHovering, heroSlides.length]);
 
-  const getCategory = async() => {
-    setLoadingCategories(true);
-    try {
-      const response = await api.get("/get-category");
-      setCategories(response.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
+  // const getCategory = async() => {
+  //   try {
+  //     // const response = await api.get("/get-category");
+  //     // setCategories(response.data);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/category/${categoryId}`);
+  const handleSellerClick = (sellerId: string) => {
+    navigate(`/seller-list/${sellerId}`);
   };
 
   const handleClick = () => {
-    navigate("/category");
+    navigate("/seller-list");
   };
 
-  const getProducts = async() => {
+  // const getProducts = async() => {
+  //   try {
+  //     const response = await api.get("/get-product");
+  //   } catch (error) {
+  //     console.error("Error fetching products:", error);
+  //   }
+  // };
+  
+  useEffect(() => {
+    // getCategory();
+    // getProducts();
+  }, []);
+
+  const getSellers = async() => {
+    setLoadingSellers(true);
     try {
-      const response = await api.get("/ ");
-      console.log(response.data, "may here");
+      const response = await api.get("/get-sellers");
+      console.log(response.data,"mayyy")
+      if(response && response.data) {
+        setSellers(response.data);
+      }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching sellers:", error);
+    } finally {
+      setLoadingSellers(false);
     }
   };
   
   useEffect(() => {
-    getCategory();
-    getProducts();
+    getSellers();
   }, []);
 
-  // Parallax effect for banner on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (bannerRef.current) {
@@ -173,7 +194,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     }
   ];
 
-  // Auto-rotate banner slides
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % bannerSlides.length);
@@ -198,12 +218,10 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     setCurrentBannerIndex((prev) => (prev - 1 + bannerSlides.length) % bannerSlides.length);
   };
 
-  // Get only first 4 categories
-  const displayCategories = categories.slice(0, 4);
+  const displaySellers = sellers.slice(0, 4);
 
   return (
     <div className="relative">
-      {/* Welcome Overlay */}
       <AnimatePresence>
         {showWelcome && (
           <motion.div
@@ -226,11 +244,9 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         )}
       </AnimatePresence>
 
-      {/* Gold accents */}
       <div className="hidden lg:block fixed top-0 bottom-0 left-8 w-px bg-gradient-to-b from-transparent via-[#D4AF37]/20 to-transparent z-10"></div>
       <div className="hidden lg:block fixed top-0 bottom-0 right-8 w-px bg-gradient-to-b from-transparent via-[#D4AF37]/20 to-transparent z-10"></div>
 
-      {/* Hero Section with Slider */}
       <div 
         className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[800px] overflow-hidden group"
         onMouseEnter={() => setIsHovering(true)}
@@ -252,12 +268,10 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             />
             <div className="absolute inset-0 bg-black/40" />
             
-            {/* Decorative elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.1)_0%,_transparent_70%)]"></div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation arrows */}
         <button 
           className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:bg-white/30 z-10"
           onClick={prevSlide}
@@ -272,7 +286,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           <FiChevronRight size={20} />
         </button>
 
-        {/* Slide indicators */}
         <div className="absolute bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
           {heroSlides.map((_, index) => (
             <button
@@ -286,13 +299,11 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           ))}
         </div>
 
-        {/* Decorative corner elements */}
         <div className="absolute top-4 md:top-8 left-4 md:left-8 w-12 md:w-16 h-12 md:h-16 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
         <div className="absolute top-4 md:top-8 right-4 md:right-8 w-12 md:w-16 h-12 md:h-16 border-r-2 border-t-2 border-[#D4AF37]/30"></div>
         <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 w-12 md:w-16 h-12 md:h-16 border-l-2 border-b-2 border-[#D4AF37]/30"></div>
         <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 w-12 md:w-16 h-12 md:h-16 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
 
-        {/* Content section */}
         <div className="relative h-full flex items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -329,7 +340,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </div>
       </div>
 
-      {/* Categories Section */}
+      {/* Sellers Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 md:mt-16 mb-12 md:mb-24">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -338,12 +349,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-8 md:mb-12"
         >
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Select Category</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Our Featured Sellers</h2>
           <div className="w-16 md:w-24 h-1 bg-[#D4AF37] mx-auto mt-3 md:mt-4 mb-3 md:mb-4"></div>
-          <p className="mt-2 text-sm md:text-base text-gray-600">Choose from our premium collection</p>
+          <p className="mt-2 text-sm md:text-base text-gray-600">Explore premium products from our trusted partners</p>
         </motion.div>
 
-        {loadingCategories ? (
+        {loadingSellers ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
             {[...Array(4)].map((_, index) => (
               <div key={index} className="bg-gray-100 rounded-lg shadow-lg overflow-hidden h-64 md:h-96 animate-pulse">
@@ -353,7 +364,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-            {displayCategories.map((category, index) => (
+            {displaySellers.map((seller, index) => (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -364,29 +375,28 @@ const Hero = ({ onShopNowClick = () => {} }) => {
               >
                 <div 
                   className="relative h-64 md:h-96 cursor-pointer" 
-                  onClick={() => handleCategoryClick(category._id)}
+                  onClick={() => handleSellerClick(seller._id)}
                 >
                   <img
-                    src={category.image}
-                    alt={category.name}
+                    src={seller.Image || "https://via.placeholder.com/400x600?text=No+Image"}
+                    alt={seller.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
                   
-                  {/* Embellishment */}
                   <div className="absolute top-4 right-4 w-8 md:w-10 h-8 md:h-10 border-2 border-[#D4AF37]/40 rounded-full flex items-center justify-center">
                     <RiStarFill className="text-[#D4AF37]/70 text-xs md:text-sm" />
                   </div>
                   
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span className="bg-black/80 text-white px-4 md:px-6 py-2 rounded-sm font-medium transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 border-b border-[#D4AF37] text-sm md:text-base">
-                      View Collection
+                      View Seller
                     </span>
                   </div>
                   
                   <div className="absolute bottom-4 md:bottom-6 left-0 right-0 text-center">
                     <h3 className="text-lg md:text-xl font-semibold text-white px-3 md:px-4 py-1.5 md:py-2 bg-black/50 backdrop-blur-sm inline-block">
-                      {category.name}
+                      {seller.name}
                     </h3>
                   </div>
                 </div>
@@ -403,7 +413,7 @@ const Hero = ({ onShopNowClick = () => {} }) => {
             onClick={handleClick}
           >
             <span className="relative z-10 flex items-center">
-              View More Categories
+              View All Sellers
               <FiArrowRight className="ml-2 transform transition-transform group-hover:translate-x-1" />
             </span>
             <div className="absolute inset-0 bg-[#D4AF37]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
@@ -436,11 +446,9 @@ const Hero = ({ onShopNowClick = () => {} }) => {
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Decorative Elements */}
                   <div className="absolute top-6 left-6 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg" />
                   <div className="absolute bottom-6 right-6 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg" />
 
-                  {/* Navigation Buttons */}
                   <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
                     <button
                       onClick={prevBannerSlide}
@@ -458,7 +466,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
                 </div>
               </div>
 
-              {/* Content Container */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -559,14 +566,12 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           </motion.button>
         </div>
         
-        {/* Decorative elements */}
         <div className="absolute top-4 md:top-8 left-4 md:left-16 w-12 md:w-20 h-12 md:h-20 border-l-2 border-t-2 border-[#D4AF37]/30"></div>
         <div className="absolute bottom-4 md:bottom-8 right-4 md:right-16 w-12 md:w-20 h-12 md:h-20 border-r-2 border-b-2 border-[#D4AF37]/30"></div>
       </div>
       
       <TrendingCarousel />
       
-      {/* Floating badge */}
       <div
         className="fixed bottom-4 md:bottom-6 right-4 md:right-6 z-40 hidden md:flex items-center justify-center"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -594,4 +599,4 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   );
 };
 
-export default Hero;            
+export default Hero;

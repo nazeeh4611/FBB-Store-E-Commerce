@@ -53,7 +53,7 @@ const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
       id: category._id
     })),
     { label: 'About', href: '/about' },
-    { label: 'Sell Product', href: '/seller' },
+    { label: 'Sell Product', href: '/seller/dashboard' },
   ];
 
   useEffect(() => {

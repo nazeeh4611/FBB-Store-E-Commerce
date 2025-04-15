@@ -36,11 +36,20 @@ const SellerSchema = new mongoose.Schema(
       },
       Image:{
         type:String
-      }
+      },
+      categories: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category'
+        }
+      ],
     },
+    
     { timestamps: true }
   );
 
 const SellerModel = mongoose.model("Seller", SellerSchema);
 
 export default SellerModel;
+
+

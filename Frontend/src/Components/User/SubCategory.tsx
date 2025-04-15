@@ -23,6 +23,8 @@ const Subcategory: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   const { category } = useParams();
+  const {seller} = useParams()
+
 
   const api = axios.create({
     baseURL: baseurl
@@ -32,7 +34,7 @@ const Subcategory: React.FC = () => {
     if (!category) return;
     setIsLoading(true);
     try {
-      const response = await api.get(`/get-subcategory/${category}`);
+      const response = await api.get(`/get-subcategory/${seller}/${category}`,);
       const enhancedData = response.data.map((cat: Category) => ({
         ...cat,
         description: `Explore our curated selection of ${cat.name.toLowerCase()}`,
@@ -52,7 +54,7 @@ const Subcategory: React.FC = () => {
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    navigate(`/products/${category}/${categoryId}`);
+    navigate(`/products/${seller}/${category}/${categoryId}`);
   };
 
   const filteredCategories = categories.filter(category =>
