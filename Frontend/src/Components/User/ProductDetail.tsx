@@ -137,40 +137,40 @@ const ImageMagnifier = ({ images, currentImage, productName }: ImageMagnifierPro
   );
 };
 
-const RelatedProductCard = ({ product }: { product: RelatedProduct }) => {
-  const productImage = Object.values(product.images).find(Boolean) || "/placeholder.svg"
+// const RelatedProductCard = ({ product }: { product: RelatedProduct }) => {
+//   const productImage = Object.values(product.images).find(Boolean) || "/placeholder.svg"
   
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
-      className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
-    >
-      <div className="aspect-[3/4] w-full overflow-hidden">
-        <img
-          src={productImage}
-          alt={product.name}
-          className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-      <div className="p-4 space-y-2">
-        <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
-          <a href={`/product/${product._id}`}>
-            <span aria-hidden="true" className="absolute inset-0" />
-            {product.brand} {product.name}
-          </a>
-        </h3>
-        <div>
-          <p className="text-sm font-medium text-gray-900">₹{product.priceINR.toLocaleString()}</p>
-          <p className="text-xs text-gray-500">AED {product.priceAED.toLocaleString()}</p>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0, y: 20 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ duration: 0.5 }}
+//       whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+//       className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+//     >
+//       <div className="aspect-[3/4] w-full overflow-hidden">
+//         <img
+//           src={productImage}
+//           alt={product.name}
+//           className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+//         />
+//         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+//       </div>
+//       <div className="p-4 space-y-2">
+//         <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
+//           <a href={`/product/${product._id}`}>
+//             <span aria-hidden="true" className="absolute inset-0" />
+//             {product.brand} {product.name}
+//           </a>
+//         </h3>
+//         <div>
+//           <p className="text-sm font-medium text-gray-900">₹{product.priceINR.toLocaleString()}</p>
+//           <p className="text-xs text-gray-500">AED {product.priceAED.toLocaleString()}</p>
+//         </div>
+//       </div>
+//     </motion.div>
+//   )
+// }
 
 export default function ProductPage() {
   const [currentImage, setCurrentImage] = useState<number>(0)
@@ -639,11 +639,11 @@ I'm interested in this product. Could you please provide more information?`)
                 View All <span aria-hidden="true">→</span>
               </a>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.slice(0, 4).map((product) => (
                 <RelatedProductCard key={product._id} product={product} />
               ))}
-            </div>
+            </div> */}
           </motion.div>
         )}
       </main>
