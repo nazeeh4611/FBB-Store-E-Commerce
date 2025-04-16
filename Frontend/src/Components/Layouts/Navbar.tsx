@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import fbb from "./Img/fbb.png";
-import axios from 'axios';
-import { baseurl } from '../../Constant/Base';
+// import axios from 'axios';
+// import { baseurl } from '../../Constant/Base';
 import { useNavigate } from 'react-router-dom';
 
 interface NavItem {
@@ -11,11 +11,11 @@ interface NavItem {
   id?: string;
 }
 
-interface Category {
-  name: string;
-  image: string;
-  _id: string;
-}
+// interface Category {
+//   name: string;
+//   image: string;
+//   _id: string;
+// }
 
 interface NavBarProps {
   isTransparent?: boolean;
@@ -24,34 +24,29 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = ({ isTransparent = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  // const [categories, setCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
   
-  const api = axios.create({
-    baseURL: baseurl
-  });
+  // const api = axios.create({
+  //   baseURL: baseurl
+  // });
 
-  const getCategory = async () => {
-    try {
-      const response = await api.get("/get-category");
-      setCategories(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const getCategory = async () => {
+  //   try {
+  //     const response = await api.get("/get-category");
+  //     // setCategories(response.data);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   useEffect(() => {
-    getCategory();
+    // getCategory();
   }, []);
 
   // Combine fixed nav items with first 4 dynamic categories
   const navItems: NavItem[] = [
     { label: 'Home', href: '/' },
-    ...categories.slice(0, 4).map(category => ({
-      label: category.name.toUpperCase(),
-      href: `/category/${category._id}`,
-      id: category._id
-    })),
     { label: 'About', href: '/about' },
     { label: 'Sell Product', href: '/seller/dashboard' },
   ];
