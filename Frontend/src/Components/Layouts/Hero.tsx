@@ -3,8 +3,9 @@ import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { RiStarFill } from "react-icons/ri";
-import Hero1 from "../Layouts/Img/Hero1.jpg";
+// import Hero1 from "../Layouts/Img/Hero1.jpg";
 import Hero2 from "../Layouts/Img/Hero2.jpg";
+import fbbslide from "../Layouts/Img/fbbslide.jpeg"
 import shoe from "../Layouts/Img/shoe.jpeg";
 import glass from "../Layouts/Img/glass.jpeg";
 import banner1 from "../Layouts/Img/banner1.jpg";
@@ -71,14 +72,14 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   
   const heroSlides = [
     {
+      image: fbbslide,
+      heading: "Premium Collection",
+      subheading: "Luxury meets comfort"
+    },
+    {
       image: isMobile ? slider12 : slider1,
       heading: "Elevate Your Style",
       subheading: "Discover the latest fashion trends"
-    },
-    {
-      image: Hero1,
-      heading: "Premium Collection",
-      subheading: "Luxury meets comfort"
     },
     {
       image: Hero2,
