@@ -3,7 +3,6 @@ import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { RiStarFill } from "react-icons/ri";
-// import Hero1 from "../Layouts/Img/Hero1.jpg";
 import Hero2 from "../Layouts/Img/Hero2.jpg";
 import fbbslide from "../Layouts/Img/fbbslide.jpeg"
 import shoe from "../Layouts/Img/shoe.jpeg";
@@ -17,21 +16,19 @@ import { baseurl } from "../../Constant/Base";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-// 
-
 interface Seller {
   _id: string,
   name: string,
   Image: string,
   categories: string[],
   email: string,
-  phone: string
+  phone: string,
+  status: boolean
 }
 
 const Hero = ({ onShopNowClick = () => {} }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  // const [categories, setCategories] = useState<Category[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [isHovering, setIsHovering] = useState(false);
   const [loadingSellers, setLoadingSellers] = useState(true);
@@ -106,15 +103,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
     return () => clearInterval(timer);
   }, [isHovering, heroSlides.length]);
 
-  // const getCategory = async() => {
-  //   try {
-  //     // const response = await api.get("/get-category");
-  //     // setCategories(response.data);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
   const handleSellerClick = (sellerId: string) => {
     navigate(`/seller-list/${sellerId}`);
   };
@@ -122,27 +110,14 @@ const Hero = ({ onShopNowClick = () => {} }) => {
   const handleClick = () => {
     navigate("/seller-list");
   };
-
-  // const getProducts = async() => {
-  //   try {
-  //     const response = await api.get("/get-product");
-  //   } catch (error) {
-  //     console.error("Error fetching products:", error);
-  //   }
-  // };
   
-  useEffect(() => {
-    // getCategory();
-    // getProducts();
-  }, []);
-
   const getSellers = async() => {
     setLoadingSellers(true);
     try {
       const response = await api.get("/get-sellers");
-      console.log(response.data,"mayyy")
       if(response && response.data) {
-        setSellers(response.data);
+        const activeSellers = response.data.filter((seller: Seller) => seller.status === true);
+        setSellers(activeSellers);
       }
     } catch (error) {
       console.error("Error fetching sellers:", error);
@@ -337,7 +312,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </div>
       </div>
 
-      {/* Sellers Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 md:mt-16 mb-12 md:mb-24">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -417,11 +391,9 @@ const Hero = ({ onShopNowClick = () => {} }) => {
           </motion.button>
         </div>
 
-        {/* Banner Section */}
         <section className="relative py-16 bg-gradient-to-b from-gray-50 to-white">
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-12 relative">
-              {/* Image Container */}
               <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative group">
                 <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
                   <AnimatePresence initial={false}>
@@ -510,7 +482,6 @@ const Hero = ({ onShopNowClick = () => {} }) => {
         </section>
       </div>
 
-      {/* New Arrivals Section */}
       <div className="relative h-[400px] md:h-[600px] w-full overflow-hidden mb-8 md:mb-16 group">
         <motion.div 
           initial={{ scale: 1.1 }}

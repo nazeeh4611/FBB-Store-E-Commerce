@@ -37,7 +37,9 @@ const SellerPages: React.FC = () => {
     try {
       const response = await api.get("/get-sellers");
       if(response && response.data) {
-        setSellers(response.data);
+        // Filter to only show verified sellers (status: true)
+        const verifiedSellers = response.data.filter((seller: Seller) => seller.status === true);
+        setSellers(verifiedSellers);
       }
     } catch (error) {
       console.error("Error fetching sellers:", error);
@@ -166,11 +168,9 @@ const SellerPages: React.FC = () => {
                       />
                       <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
                       
-                      {seller.status && (
-                        <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                          Verified
-                        </div>
-                      )}
+                      <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        Verified
+                      </div>
                     </div>
 
                     <div className="p-6 bg-white">
