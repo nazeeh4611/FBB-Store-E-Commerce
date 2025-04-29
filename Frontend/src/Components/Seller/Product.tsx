@@ -138,8 +138,6 @@ const handleAddNewClick = () => {
   setIsModalOpen(true);
 };
 
-//   const email = ExtractToken(token)
-
   const getCategories = async () => {
     try {
       const response = await api.get("/admin/get-category");
@@ -181,9 +179,20 @@ const handleAddNewClick = () => {
       subCategoryId: '',
     });
     
-    const filtered = subCategories.filter(
-      (subCat) => subCat.categoryId._id === categoryId
-    );
+    // Filter subcategories based on the selected category ID
+    const filtered = subCategories.filter(subCat => {
+      // Check if categoryId exists and is an object with _id
+      if (typeof subCat.categoryId === 'object' && subCat.categoryId !== null) {
+        return subCat.categoryId._id === categoryId;
+      }
+      // If categoryId is a string, compare directly
+      return subCat.categoryId === categoryId;
+    });
+    
+    console.log("Selected Category ID:", categoryId);
+    console.log("All SubCategories:", subCategories);
+    console.log("Filtered SubCategories:", filtered);
+    
     setFilteredSubCategories(filtered);
   };
 
@@ -260,11 +269,18 @@ const handleAddNewClick = () => {
     });
     setImagePreviews(previews);
   
-    const filtered = subCategories.filter(
-      (subCat) => subCat.categoryId._id === product.categoryId._id
-    );
-    setFilteredSubCategories(filtered);
+    // Filter subcategories for the product category
+    const filtered = subCategories.filter(subCat => {
+      if (typeof subCat.categoryId === 'object' && subCat.categoryId !== null) {
+        return subCat.categoryId._id === product.categoryId._id;
+      }
+      return subCat.categoryId === product.categoryId._id;
+    });
     
+    console.log("Edit - Selected Category ID:", product.categoryId._id);
+    console.log("Edit - Filtered SubCategories:", filtered);
+    
+    setFilteredSubCategories(filtered);
     setIsModalOpen(true);
   };
 
@@ -565,29 +581,26 @@ const handleAddNewClick = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <button 
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Edit2 size={20} />
-                        </button>
+                        <div className="flex space-x-3">
+                          <button 
+                            className="text-blue-600 hover:text-blue-800"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Edit2 size={20} />
+                          </button>
+                          <button 
+                            className="text-red-600 hover:text-red-800"
+                            onClick={() => handleDeleteClick(product._id)}
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </td>
-                      <td className="py-4 px-4">
-    <div className="flex space-x-2">
-      <button 
-        className="text-red-600 hover:text-red-800"
-        onClick={() => handleDeleteClick(product._id)}
-      >
-        <Trash2 size={20} />
-      </button>
-    </div>
-  </td>
-
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="py-4 px-4 text-center text-gray-500">
+                    <td colSpan={8} className="py-4 px-4 text-center text-gray-500">
                       No products found
                     </td>
                   </tr>
@@ -595,35 +608,37 @@ const handleAddNewClick = () => {
               </tbody>
             </table>
           </div>
+          
           {deleteModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-md w-full p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Confirm Delete
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Are you sure you want to delete this product? This action cannot be undone.
-        </p>
-        <div className="flex justify-end space-x-4">
-          <button
-            onClick={() => {
-              setDeleteModalOpen(false);
-              setProductToDelete(null);
-            }}
-            className="px-4 py-2 text-gray-700 hover:text-gray-900"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl max-w-md w-full p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                  Confirm Delete
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this product? This action cannot be undone.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={() => {
+                      setDeleteModalOpen(false);
+                      setProductToDelete(null);
+                    }}
+                    className="px-4 py-2 text-gray-700 hover:text-gray-900"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {sortedProducts.length > 0 && totalPages > 1 && (
             <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 border-t border-gray-100 gap-4">
               <div className="text-sm text-gray-600">
