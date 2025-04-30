@@ -49,7 +49,6 @@ app.get('/', (req, res) => {
     res.send('Backend is running');
 });
 
-console.log("evrything fine")
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Backend/build', 'index.html'));
