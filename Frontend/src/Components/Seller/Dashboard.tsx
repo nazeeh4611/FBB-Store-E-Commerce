@@ -6,6 +6,7 @@ import { baseurl } from '../../Constant/Base';
 import { useGetToken } from '../../Token/getToken';
 import ExtractToken from '../../Token/Extract';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface CardProps {
   children: ReactNode;
@@ -73,6 +74,7 @@ const DashboardPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [Image, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string>('');
+  const navigate = useNavigate()
 
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
     currentPassword: '',
@@ -208,9 +210,10 @@ const DashboardPage: React.FC = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+
   const handleLogout = () => {
-    localStorage.removeItem("sellerToken");
-    window.location.href = "/login";
+    localStorage.clear();
+    navigate('/seller/');
   };
 
   return (

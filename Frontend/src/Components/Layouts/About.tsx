@@ -1,6 +1,8 @@
 import { MapPin, Phone, Mail, Clock, Instagram } from 'lucide-react';
 import Footer from './Footer';
 import NavBar from './Navbar';
+import Murshid from "../Layouts/Img/Murshid.png";
+ 
 
 interface ContactInfo {
   address: string;
@@ -18,17 +20,17 @@ interface CEOInfo {
 
 const AboutPage = () => {
   const contactInfo: ContactInfo = {
-    address: "123 Fashion Street, Shopping District, City 12345",
-    phone: "+1 (555) 123-4567",
-    email: "support@fbbstore.com",
+    address: "Nooras Tower, near Supplyco, Chettipadi, Kerala 676319",
+    phone: "+91 90612 56500",
+    email: "fbbstore1@gmail.com",
     hours: "Mon-Sat: 9:00 AM - 8:00 PM"
   };
 
   const ceoInfo: CEOInfo = {
-    name: "Sarah Johnson",
+    name: "Murshid Ul Haq" ,
     title: "Founder & CEO",
-    instagram: "@sarahjohnson_fbb",
-    bio: "With over 15 years of experience in the fashion and retail industry, Sarah founded FBB Store with a passion for making quality fashion accessible to everyone. Her vision has transformed FBB from a small boutique to the leading fashion destination it is today."
+    instagram: "@murshid__nooras",
+    bio: "With over 5 years of experience in the retail industry, Murshid founded FBB Store with a passion for making quality fashion accessible to everyone."
   };
 
   return (
@@ -79,8 +81,8 @@ const AboutPage = () => {
             <h2 className="text-3xl font-bold mb-8">Meet Our Founder</h2>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                <div className="w-40 h-40 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
-                  <span className="text-gray-400 text-lg">Photo</span>
+                <div className="w-40 h-40 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  <img src={Murshid} alt="Murshid Ul Haq" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-2xl font-bold">{ceoInfo.name}</h3>
