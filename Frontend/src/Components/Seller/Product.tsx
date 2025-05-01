@@ -391,11 +391,17 @@ const SellerProductPage = () => {
           }
         }
       });
+
+      console.log("this be consoling ")
       
       if (editingProduct) {
         await api.put(`/seller/edit-product/${editingProduct}`, formDataToSend);
       } else {
-        await api.post("/seller/add-product", formDataToSend);
+        const aws = await api.post("/seller/add-product", formDataToSend);
+        console.log("this be consoling 2",aws)
+
+
+
       }
       
       await getProducts();
