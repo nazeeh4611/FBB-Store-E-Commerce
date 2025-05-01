@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight,Trash2, Menu, LogOut } from 'lucide-react';
+import { PlusCircle, X, Upload, Edit2, Search, ChevronLeft, ChevronRight, Trash2, Menu, LogOut, Film, Image } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { baseurl } from '../../Constant/Base';
 import axios from "axios";
@@ -25,13 +25,22 @@ interface Product {
   priceINR: number;
   priceAED: number;
   images: string[];
+  videos: string[];
+  description: string;
   createdAt: string;
   updatedAt: string;
   trending: boolean;
 }
+
 interface Seller {
   name: string;
   status: boolean;
+}
+
+interface MediaFile {
+  file: File | null;
+  type: 'image' | 'video';
+  preview: string;
 }
 
 interface ProductFormData {
@@ -41,8 +50,10 @@ interface ProductFormData {
   subCategoryId: string;
   priceINR: string;
   priceAED: string;
-  images: (File | null)[];
+  mediaFiles: MediaFile[];
   existingImages: string[];
+  existingVideos: string[];
+  description: string;
   isTrending: boolean;
 }
 
@@ -53,7 +64,7 @@ const SellerProductPage = () => {
   const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreviews, setImagePreviews] = useState<string[]>(['', '', '', '']);
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>(['', '', '', '']);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
@@ -64,8 +75,15 @@ const SellerProductPage = () => {
     subCategoryId: '',
     priceINR: '',
     priceAED: '',
-    images: [null, null, null, null],
+    mediaFiles: [
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' }
+    ],
     existingImages: [],
+    existingVideos: [],
+    description: '',
     isTrending: false
   });
 
@@ -76,19 +94,13 @@ const SellerProductPage = () => {
   const [itemsPerPage] = useState(10);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-
   const api = axios.create({
     baseURL: baseurl,
   });
   const [seller, setSeller] = useState<Seller>({ name: "", status: false });
 
-
-
-  const token = useGetToken("sellerToken")
-  console.log(typeof token,"may here")
-
-  const sellerId = ExtractToken(token)
-
+  const token = useGetToken("sellerToken");
+  const sellerId = ExtractToken(token);
 
   const getSeller = async () => {
     try {
@@ -102,7 +114,6 @@ const SellerProductPage = () => {
       toast.error('Failed to fetch seller information');
     }
   };
-
 
   const handleDeleteClick = (productId: string) => {
     if (!seller.status) {
@@ -130,13 +141,13 @@ const SellerProductPage = () => {
     }
   };
 
-const handleAddNewClick = () => {
-  if (!seller.status) {
-    toast.error('Your account is pending approval. Please contact admin for more information.');
-    return;
-  }
-  setIsModalOpen(true);
-};
+  const handleAddNewClick = () => {
+    if (!seller.status) {
+      toast.error('Your account is pending approval. Please contact admin for more information.');
+      return;
+    }
+    setIsModalOpen(true);
+  };
 
   const getCategories = async () => {
     try {
@@ -179,75 +190,141 @@ const handleAddNewClick = () => {
       subCategoryId: '',
     });
     
-    // Filter subcategories based on the selected category ID
     const filtered = subCategories.filter(subCat => {
-      // Check if categoryId exists and is an object with _id
       if (typeof subCat.categoryId === 'object' && subCat.categoryId !== null) {
         return subCat.categoryId._id === categoryId;
       }
-      // If categoryId is a string, compare directly
       return subCat.categoryId === categoryId;
     });
-    
-    console.log("Selected Category ID:", categoryId);
-    console.log("All SubCategories:", subCategories);
-    console.log("Filtered SubCategories:", filtered);
     
     setFilteredSubCategories(filtered);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>, index: number, mediaType: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (file) {
-      const newImages = [...formData.images];
-      newImages[index] = file;
-      
-      const newExistingImages = [...formData.existingImages];
-      newExistingImages[index] = '';
-      
       const previewUrl = URL.createObjectURL(file);
-      const newPreviews = [...imagePreviews];
-      newPreviews[index] = previewUrl;
       
-      setFormData(prev => ({
-        ...prev,
-        images: newImages,
-        existingImages: newExistingImages
-      }));
-      setImagePreviews(newPreviews);
+      const newMediaFiles = [...formData.mediaFiles];
+      newMediaFiles[index] = {
+        file,
+        type: mediaType,
+        preview: previewUrl
+      };
+      
+      if (mediaType === 'image') {
+        const newExistingImages = [...formData.existingImages];
+        newExistingImages[index] = '';
+        
+        setFormData(prev => ({
+          ...prev,
+          mediaFiles: newMediaFiles,
+          existingImages: newExistingImages
+        }));
+      } else {
+        const newExistingVideos = [...formData.existingVideos];
+        newExistingVideos[index - formData.existingImages.length] = '';
+        
+        setFormData(prev => ({
+          ...prev,
+          mediaFiles: newMediaFiles,
+          existingVideos: newExistingVideos
+        }));
+      }
+      
+      const newPreviews = [...mediaPreviews];
+      newPreviews[index] = previewUrl;
+      setMediaPreviews(newPreviews);
     }
   };
 
-  const removeImage = (index: number) => {
-    const newImages = [...formData.images];
-    newImages[index] = null;
+  const removeMedia = (index: number) => {
+    const newMediaFiles = [...formData.mediaFiles];
+    newMediaFiles[index] = { file: null, type: 'image', preview: '' };
+
+    const isImage = index < formData.existingImages.length;
     
-    const newExistingImages = [...formData.existingImages];
-    newExistingImages[index] = '';
+    if (isImage) {
+      const newExistingImages = [...formData.existingImages];
+      newExistingImages[index] = '';
+      
+      setFormData(prev => ({
+        ...prev,
+        mediaFiles: newMediaFiles,
+        existingImages: newExistingImages
+      }));
+    } else {
+      const videoIndex = index - formData.existingImages.length;
+      const newExistingVideos = [...formData.existingVideos];
+      newExistingVideos[videoIndex] = '';
+      
+      setFormData(prev => ({
+        ...prev,
+        mediaFiles: newMediaFiles,
+        existingVideos: newExistingVideos
+      }));
+    }
     
-    const newPreviews = [...imagePreviews];
+    const newPreviews = [...mediaPreviews];
     newPreviews[index] = '';
+    setMediaPreviews(newPreviews);
+  };
+
+  const toggleMediaType = (index: number) => {
+    const newMediaFiles = [...formData.mediaFiles];
+    const currentType = newMediaFiles[index].type;
+    newMediaFiles[index] = { 
+      ...newMediaFiles[index], 
+      type: currentType === 'image' ? 'video' : 'image'
+    };
     
     setFormData(prev => ({
       ...prev,
-      images: newImages,
-      existingImages: newExistingImages
+      mediaFiles: newMediaFiles
     }));
-    setImagePreviews(newPreviews);
   };
-
-
 
   const handleEdit = (product: Product) => {
     if (!seller.status) {
       toast.error('Your account is pending approval. Please contact admin for more information.');
       return;
     }
+    
     setEditingProduct(product._id);
     
     const imageArray = Array.isArray(product.images) 
       ? product.images 
       : Object.values(product.images || {});
+      
+    const videoArray = Array.isArray(product.videos) 
+      ? product.videos 
+      : Object.values(product.videos || {});
+    
+    const initialMediaFiles: MediaFile[] = [
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' },
+      { file: null, type: 'image', preview: '' }
+    ];
+    
+    const previews = Array(4).fill('');
+    
+    imageArray.forEach((url, index) => {
+      if (index < 4) {
+        initialMediaFiles[index].type = 'image'; // This is now explicitly typed as 'image'
+        previews[index] = url;
+      }
+    });
+    
+    videoArray.forEach((url, index) => {
+      const mediaIndex = imageArray.length + index;
+      if (mediaIndex < 4) {
+        initialMediaFiles[mediaIndex].type = 'video'; // This is now explicitly typed as 'video'
+        previews[mediaIndex] = url;
+      }
+    });
+    
+    setMediaPreviews(previews);
   
     setFormData({
       name: product.name,
@@ -256,29 +333,19 @@ const handleAddNewClick = () => {
       subCategoryId: product.subCategoryId._id,
       priceINR: product.priceINR.toString(),
       priceAED: product.priceAED.toString(),
-      images: [null, null, null, null],
+      mediaFiles: initialMediaFiles,
       existingImages: imageArray as string[],
+      existingVideos: videoArray as string[],
+      description: product.description || '',
       isTrending: product.trending
     });
-      
-    const previews = Array(4).fill('');
-    imageArray.forEach((url, index) => {
-      if (index < 4) {
-        previews[index] = url;
-      }
-    });
-    setImagePreviews(previews);
   
-    // Filter subcategories for the product category
     const filtered = subCategories.filter(subCat => {
       if (typeof subCat.categoryId === 'object' && subCat.categoryId !== null) {
         return subCat.categoryId._id === product.categoryId._id;
       }
       return subCat.categoryId === product.categoryId._id;
     });
-    
-    console.log("Edit - Selected Category ID:", product.categoryId._id);
-    console.log("Edit - Filtered SubCategories:", filtered);
     
     setFilteredSubCategories(filtered);
     setIsModalOpen(true);
@@ -300,15 +367,28 @@ const handleAddNewClick = () => {
       formDataToSend.append('subCategoryId', formData.subCategoryId);
       formDataToSend.append('priceINR', formData.priceINR);
       formDataToSend.append('priceAED', formData.priceAED);
+      formDataToSend.append('description', formData.description);
       formDataToSend.append('isTrending', formData.isTrending.toString());
-      formDataToSend.append("sellerId",sellerId.userId)
+      formDataToSend.append("sellerId", sellerId.userId);
       
       const nonEmptyExistingImages = formData.existingImages.filter(url => url !== '');
       formDataToSend.append('existingImages', JSON.stringify(nonEmptyExistingImages));
       
-      formData.images.forEach((image, index) => {
-        if (image) {
-          formDataToSend.append(`image${index + 1}`, image);
+      const nonEmptyExistingVideos = formData.existingVideos.filter(url => url !== '');
+      formDataToSend.append('existingVideos', JSON.stringify(nonEmptyExistingVideos));
+      
+      let imageCount = 0;
+      let videoCount = 0;
+      
+      formData.mediaFiles.forEach((media) => {
+        if (media.file) {
+          if (media.type === 'image') {
+            formDataToSend.append(`image${imageCount + 1}`, media.file);
+            imageCount++;
+          } else {
+            formDataToSend.append(`video${videoCount + 1}`, media.file);
+            videoCount++;
+          }
         }
       });
       
@@ -337,11 +417,18 @@ const handleAddNewClick = () => {
       subCategoryId: '',
       priceINR: '',
       priceAED: '',
-      images: [null, null, null, null],
+      mediaFiles: [
+        { file: null, type: 'image', preview: '' },
+        { file: null, type: 'image', preview: '' },
+        { file: null, type: 'image', preview: '' },
+        { file: null, type: 'image', preview: '' }
+      ],
       existingImages: [],
+      existingVideos: [],
+      description: '',
       isTrending: false
     });
-    setImagePreviews(['', '', '', '']);
+    setMediaPreviews(['', '', '', '']);
     setFilteredSubCategories([]);
   };
 
@@ -416,13 +503,11 @@ const handleAddNewClick = () => {
     );
   };
 
-
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
     localStorage.removeItem("sellerToken");
     window.location.href = "/login";
   };
@@ -501,17 +586,17 @@ const handleAddNewClick = () => {
               </div>
               
               <button 
-          onClick={handleAddNewClick}
-          className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors shadow-sm ${
-            seller.status 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-          disabled={!seller.status}
-        >
-          <PlusCircle size={20} />
-          <span>Add Product</span>
-        </button>
+                onClick={handleAddNewClick}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors shadow-sm ${
+                  seller.status 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+                disabled={!seller.status}
+              >
+                <PlusCircle size={20} />
+                <span>Add Product</span>
+              </button>
             </div>
           </div>
   
@@ -552,7 +637,7 @@ const handleAddNewClick = () => {
                   >
                     Price (AED) <SortIndicator field="priceAED" />
                   </th>
-                  <th className="pb-4 px-4 text-gray-600 font-semibold">Images</th>
+                  <th className="pb-4 px-4 text-gray-600 font-semibold">Media</th>
                   <th className="pb-4 px-4 text-gray-600 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -572,11 +657,26 @@ const handleAddNewClick = () => {
                       <td className="py-4 px-4">
                         <div className="flex space-x-2">
                           {product.images && Object.values(product.images).length > 0 && (
-                            <img 
-                              src={Object.values(product.images)[0]} 
-                              alt={`${product.name} 1`}
-                              className="w-12 h-12 object-cover rounded"
-                            />
+                            <div className="relative">
+                              <img 
+                                src={Object.values(product.images)[0]} 
+                                alt={`${product.name} 1`}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                              <span className="absolute bottom-0 right-0 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                {Object.values(product.images).length}
+                              </span>
+                            </div>
+                          )}
+                          {product.videos && Object.values(product.videos).length > 0 && (
+                            <div className="relative">
+                              <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                                <Film size={20} className="text-gray-600" />
+                              </div>
+                              <span className="absolute bottom-0 right-0 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                {Object.values(product.videos).length}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -653,7 +753,6 @@ const handleAddNewClick = () => {
                   <ChevronLeft size={16} />
                 </button>
                 {totalPages <= 5 ? (
-                  // If we have 5 or fewer pages, show all of them
                   Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
                     <button
                       key={number}
@@ -668,9 +767,7 @@ const handleAddNewClick = () => {
                     </button>
                   ))
                 ) : (
-                  // If we have more than 5 pages, show a limited set with ellipsis
                   <>
-                    {/* Always show first page */}
                     <button
                       onClick={() => paginate(1)}
                       className={`w-10 h-10 rounded-lg ${
@@ -859,45 +956,69 @@ const handleAddNewClick = () => {
                       </label>
                     </div>
                   </div>
-  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product Images
+                      Product Media
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       {[0, 1, 2, 3].map((index) => (
                         <div key={index} className="mt-1 flex flex-col items-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                          {imagePreviews[index] || formData.existingImages[index] ? (
+                          {mediaPreviews[index] || 
+                            (formData.mediaFiles[index].type === 'image' && formData.existingImages[index]) || 
+                            (formData.mediaFiles[index].type === 'video' && formData.existingVideos[index - formData.existingImages.length]) ? (
                             <div className="relative w-full h-48">
-                              <img
-                                src={imagePreviews[index] || formData.existingImages[index]}
-                                alt={`Preview ${index + 1}`}
-                                className="h-full w-full object-cover rounded-lg"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                              >
-                                <X size={16} />
-                              </button>
+                              {formData.mediaFiles[index].type === 'image' ? (
+                                <img
+                                  src={mediaPreviews[index] || formData.existingImages[index]}
+                                  alt={`Preview ${index + 1}`}
+                                  className="h-full w-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gray-100 rounded-lg">
+                                  <Film size={48} className="text-gray-400" />
+                                  <span className="ml-2 text-gray-600">Video</span>
+                                </div>
+                              )}
+                              <div className="absolute top-2 right-2 flex space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMediaType(index)}
+                                  className="bg-blue-500 text-white rounded-full p-1"
+                                >
+                                  {formData.mediaFiles[index].type === 'image' ? <Film size={16} /> : <Image size={16} />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeMedia(index)}
+                                  className="bg-red-500 text-white rounded-full p-1"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
                             </div>
                           ) : (
                             <div className="space-y-2 text-center">
                               <Upload className="mx-auto h-12 w-12 text-gray-400" />
                               <div className="flex text-sm text-gray-600">
                                 <label className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500">
-                                  <span>Upload Image {index + 1}</span>
+                                  <span>Upload {formData.mediaFiles[index].type === 'image' ? 'Image' : 'Video'} {index + 1}</span>
                                   <input
                                     type="file"
                                     className="sr-only"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageChange(e, index)}
+                                    accept={formData.mediaFiles[index].type === 'image' ? "image/*" : "video/*"}
+                                    onChange={(e) => handleMediaChange(e, index, formData.mediaFiles[index].type)}
                                   />
                                 </label>
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => toggleMediaType(index)}
+                                className="mt-2 text-xs text-blue-600 hover:text-blue-500"
+                              >
+                                Switch to {formData.mediaFiles[index].type === 'image' ? 'Video' : 'Image'}
+                              </button>
                               <p className="text-xs text-gray-500">
-                                PNG, JPG up to 10MB
+                                {formData.mediaFiles[index].type === 'image' ? 'PNG, JPG up to 10MB' : 'MP4, MOV up to 20MB'}
                               </p>
                             </div>
                           )}

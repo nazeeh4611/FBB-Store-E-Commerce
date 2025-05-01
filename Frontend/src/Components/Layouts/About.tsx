@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Instagram } from 'lucide-react';
 import Footer from './Footer';
 import NavBar from './Navbar';
 
@@ -9,12 +9,26 @@ interface ContactInfo {
   hours: string;
 }
 
+interface CEOInfo {
+  name: string;
+  title: string;
+  instagram: string;
+  bio: string;
+}
+
 const AboutPage = () => {
   const contactInfo: ContactInfo = {
     address: "123 Fashion Street, Shopping District, City 12345",
     phone: "+1 (555) 123-4567",
     email: "support@fbbstore.com",
     hours: "Mon-Sat: 9:00 AM - 8:00 PM"
+  };
+
+  const ceoInfo: CEOInfo = {
+    name: "Sarah Johnson",
+    title: "Founder & CEO",
+    instagram: "@sarahjohnson_fbb",
+    bio: "With over 15 years of experience in the fashion and retail industry, Sarah founded FBB Store with a passion for making quality fashion accessible to everyone. Her vision has transformed FBB from a small boutique to the leading fashion destination it is today."
   };
 
   return (
@@ -58,8 +72,34 @@ const AboutPage = () => {
         </div>
       </div>
 
-      {/* Contact Section */}
+      {/* CEO Section */}
       <div className="bg-gray-100 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8">Meet Our Founder</h2>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                <div className="w-40 h-40 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
+                  <span className="text-gray-400 text-lg">Photo</span>
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-2xl font-bold">{ceoInfo.name}</h3>
+                  <p className="text-blue-600 font-medium mb-2">{ceoInfo.title}</p>
+                  <p className="text-gray-600 mb-4">{ceoInfo.bio}</p>
+                  <a href={`https://instagram.com/${ceoInfo.instagram.replace('@', '')}`} 
+                     className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                    <Instagram className="w-5 h-5 mr-2" />
+                    <span>{ceoInfo.instagram}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Section */}
+      <div className="bg-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-8">Contact Us</h2>
@@ -82,7 +122,7 @@ const AboutPage = () => {
                   <p className="text-gray-600">{contactInfo.hours}</p>
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
                 <form className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
