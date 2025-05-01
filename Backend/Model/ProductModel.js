@@ -1,3 +1,4 @@
+// 1. Updated Product Schema to include videos
 import mongoose from "mongoose";
 
 const ProductSchema = new mongoose.Schema({
@@ -10,11 +11,11 @@ const ProductSchema = new mongoose.Schema({
     required: true
   },
   priceINR: {
-    type: Number,  // Changed to Number for better querying and validation
+    type: Number,
     required: true
   },
   priceAED: {
-    type: Number,  // Changed to Number for better querying and validation
+    type: Number,
     required: true
   },
   images: {
@@ -22,6 +23,10 @@ const ProductSchema = new mongoose.Schema({
     image2: { type: String },
     image3: { type: String },
     image4: { type: String }
+  },
+  videos: {
+    video1: { type: String },
+    video2: { type: String }
   },
   subCategoryId:{
     type: mongoose.Schema.Types.ObjectId,

@@ -63,6 +63,8 @@ export const getDetails = async(req,res)=>{
         const {id} = req.params
 
         const product = await productModel.findById(id).populate('subCategoryId', 'name').populate("seller",)
+
+        console.log(product,"this eb thge prodiuct sending ")
         res.status(200).json(product)
     } catch (error) {
         res.status(500).json({message:"Internal server error"})

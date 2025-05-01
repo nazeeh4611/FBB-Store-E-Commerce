@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "../Layouts/button"
-import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, Shield, Calendar, Award } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, Shield, Calendar, Award, Play } from "lucide-react"
 import { cn } from "../../lib/util"
 import { useParams } from "react-router-dom"
 import axios from "axios"
@@ -16,6 +16,12 @@ interface ProductImages {
   image4: string
 }
 
+interface ProductVideos {
+  video1?: string
+  video2?: string
+  video3?: string
+}
+
 interface ProductData {
   _id: string
   name: string
@@ -25,6 +31,7 @@ interface ProductData {
   subCategoryId: Category
   active: boolean
   images: ProductImages
+  videos?: ProductVideos
   createdAt: string
   updatedAt: string
   seller: Seller
@@ -52,17 +59,23 @@ interface RelatedProduct {
   category: string
 }
 
+interface MediaItem {
+  type: 'image' | 'video'
+  url: string
+}
+
 interface ImageMagnifierProps {
-  images: string[]
-  currentImage: number
+  media: MediaItem[]
+  currentIndex: number
   productName: string
 }
 
-const ImageMagnifier = ({ images, currentImage, productName }: ImageMagnifierProps) => {
+const ImageMagnifier = ({ media, currentIndex, productName }: ImageMagnifierProps) => {
   const [showZoom, setShowZoom] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const currentItem = media[currentIndex];
 
   useEffect(() => {
     if (containerRef.current) {
@@ -82,7 +95,7 @@ const ImageMagnifier = ({ images, currentImage, productName }: ImageMagnifierPro
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || currentItem.type !== 'image') return;
 
     const { left, top } = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - left) / dimensions.width) * 100;
@@ -94,86 +107,62 @@ const ImageMagnifier = ({ images, currentImage, productName }: ImageMagnifierPro
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-[3/4] rounded-lg overflow-hidden bg-white"
-      onMouseEnter={() => setShowZoom(true)}
+      className="relative w-full aspect-[3/4] rounded-lg overflow-hidden bg-black"
+      onMouseEnter={() => currentItem.type === 'image' && setShowZoom(true)}
       onMouseLeave={() => setShowZoom(false)}
       onMouseMove={handleMouseMove}
     >
-      <img
-        src={images[currentImage] || "/placeholder.svg"}
-        alt={productName}
-        className="w-full h-full object-cover"
-      />
+      {currentItem.type === 'image' ? (
+        <>
+          <img
+            src={currentItem.url || "/placeholder.svg"}
+            alt={productName}
+            className="w-full h-full object-cover"
+          />
 
-      {showZoom && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-black/5" />
-          <div
-            className="absolute w-32 h-32 border-2 border-white rounded-full overflow-hidden shadow-lg transform -translate-x-1/2 -translate-y-1/2"
-            style={{
-              left: `${Math.min(Math.max(position.x, 16), 84)}%`,
-              top: `${Math.min(Math.max(position.y, 16), 84)}%`,
-            }}
-          >
-            <div
-              className="absolute w-full h-full scale-16"
-              style={{
-                transform: `translate(-${position.x * 16}%, -${position.y * 16}%)`,
-                transformOrigin: 'top left',
-                width: '1600%',
-                height: '1600%'
-              }}
-            >
-              <img
-                src={images[currentImage] || "/placeholder.svg"}
-                alt={productName}
-                className="w-full h-full object-cover"
-              />
+          {showZoom && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 bg-black/5" />
+              <div
+                className="absolute w-32 h-32 border-2 border-white rounded-full overflow-hidden shadow-lg transform -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  left: `${Math.min(Math.max(position.x, 16), 84)}%`,
+                  top: `${Math.min(Math.max(position.y, 16), 84)}%`,
+                }}
+              >
+                <div
+                  className="absolute w-full h-full scale-16"
+                  style={{
+                    transform: `translate(-${position.x * 16}%, -${position.y * 16}%)`,
+                    transformOrigin: 'top left',
+                    width: '1600%',
+                    height: '1600%'
+                  }}
+                >
+                  <img
+                    src={currentItem.url || "/placeholder.svg"}
+                    alt={productName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </>
+      ) : (
+        <video 
+          src={currentItem.url}
+          controls
+          autoPlay={false}
+          className="w-full h-full object-contain"
+        />
       )}
     </div>
   );
 };
 
-// const RelatedProductCard = ({ product }: { product: RelatedProduct }) => {
-//   const productImage = Object.values(product.images).find(Boolean) || "/placeholder.svg"
-  
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ duration: 0.5 }}
-//       whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
-//       className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
-//     >
-//       <div className="aspect-[3/4] w-full overflow-hidden">
-//         <img
-//           src={productImage}
-//           alt={product.name}
-//           className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-//         />
-//         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-//       </div>
-//       <div className="p-4 space-y-2">
-//         <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
-//           <a href={`/product/${product._id}`}>
-//             <span aria-hidden="true" className="absolute inset-0" />
-//             {product.brand} {product.name}
-//           </a>
-//         </h3>
-//         <div>
-//           <p className="text-sm font-medium text-gray-900">₹{product.priceINR.toLocaleString()}</p>
-//           <p className="text-xs text-gray-500">AED {product.priceAED.toLocaleString()}</p>
-//         </div>
-//       </div>
-//     </motion.div>
-//   )
-// }
-
 export default function ProductPage() {
-  const [currentImage, setCurrentImage] = useState<number>(0)
+  const [currentMediaIndex, setCurrentMediaIndex] = useState<number>(0)
   const [productData, setProductData] = useState<ProductData | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -181,6 +170,7 @@ export default function ProductPage() {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
   const [region, setRegion] = useState<'IN' | 'AE'>('IN')
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const { id } = useParams<{ id: string }>()
 
   const PHONE_NUMBERS = {
@@ -204,6 +194,16 @@ export default function ProductPage() {
       setLoading(true)
       const response = await api.get(`/get-product/${id}`)
       setProductData(response.data)
+      
+      const images = Object.values(response.data.images).filter(Boolean) as string[]
+      const videos = response.data.videos ? Object.values(response.data.videos).filter(Boolean) as string[] : []
+      
+      const mediaArray: MediaItem[] = [
+        ...images.map((url) => ({ type: 'image' as const, url })),
+        ...videos.map((url) => ({ type: 'video' as const, url }))
+      ]
+      
+      setMediaItems(mediaArray)
     } catch (error) {
       console.error("Error fetching product:", error)
     } finally {
@@ -316,8 +316,6 @@ I'm interested in this product. Could you please provide more information?`)
     )
   }
 
-  const productImages = Object.values(productData.images).filter(Boolean)
-
   const RegionToggle = () => (
     <div className="flex items-center gap-2 mb-4">
       <button
@@ -400,18 +398,20 @@ I'm interested in this product. Could you please provide more information?`)
         >
           <div className="w-full lg:w-[500px] mx-auto">
             <div className="relative group mb-4">
-            <ImageMagnifier 
-                images={productImages}
-                currentImage={currentImage}
-                productName={`${productData.brand} ${productData.name}`}
-              />
+              {mediaItems.length > 0 && (
+                <ImageMagnifier 
+                  media={mediaItems}
+                  currentIndex={currentMediaIndex}
+                  productName={`${productData.brand} ${productData.name}`}
+                />
+              )}
               
-              {productImages.length > 1 && (
+              {mediaItems.length > 1 && (
                 <>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setCurrentImage((prev) => (prev - 1 + productImages.length) % productImages.length)}
+                    onClick={() => setCurrentMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)}
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg hover:bg-white transition-colors z-10"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -419,7 +419,7 @@ I'm interested in this product. Could you please provide more information?`)
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setCurrentImage((prev) => (prev + 1) % productImages.length)}
+                    onClick={() => setCurrentMediaIndex((prev) => (prev + 1) % mediaItems.length)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg hover:bg-white transition-colors z-10"
                   >
                     <ChevronRight className="h-5 w-5" />
@@ -429,25 +429,39 @@ I'm interested in this product. Could you please provide more information?`)
             </div>
 
             <div className="w-full grid grid-cols-4 gap-2">
-              {productImages.map((img, index) => (
+              {mediaItems.map((item, index) => (
                 <motion.button
                   key={index}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentImage(index)}
+                  onClick={() => setCurrentMediaIndex(index)}
                   className={cn(
                     "w-full transition-all rounded-md overflow-hidden hover:shadow-md",
-                    currentImage === index 
+                    currentMediaIndex === index 
                       ? "ring-2 ring-black ring-offset-2" 
                       : "ring-1 ring-gray-200"
                   )}
                 >
                   <div className="w-full aspect-square relative">
-                    <img
-                      src={img || "/placeholder.svg"}
-                      alt={`View ${index + 1}`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                    {item.type === 'image' ? (
+                      <img
+                        src={item.url || "/placeholder.svg"}
+                        alt={`View ${index + 1}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <div className="absolute inset-0">
+                          <div 
+                            className="w-full h-full bg-center bg-cover bg-no-repeat"
+                            style={{ backgroundImage: `url(${mediaItems.find(i => i.type === 'image')?.url || '/placeholder.svg'})`, filter: 'blur(1px)' }}
+                          />
+                        </div>
+                        <div className="relative z-10 bg-black/50 rounded-full p-2">
+                          <Play className="h-5 w-5 text-white" fill="white" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.button>
               ))}
@@ -639,11 +653,6 @@ I'm interested in this product. Could you please provide more information?`)
                 View All <span aria-hidden="true">→</span>
               </a>
             </div>
-            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.slice(0, 4).map((product) => (
-                <RelatedProductCard key={product._id} product={product} />
-              ))}
-            </div> */}
           </motion.div>
         )}
       </main>

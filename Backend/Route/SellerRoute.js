@@ -17,17 +17,6 @@ const s3Client = new S3Client({
   },
 });
 
-// const categoryUpload = multer({
-//   storage: multerS3({
-//     s3: s3Client,
-//     bucket: "category-fbb",
-//     contentType: multerS3.AUTO_CONTENT_TYPE,
-//     key: function (req, file, cb) {
-//       cb(null, Date.now().toString() + "-" + file.originalname);
-//     },
-//   }),
-// });
-
 const profileImageUpload = multer({
   storage: multerS3({
     s3: s3Client,
@@ -40,8 +29,8 @@ const profileImageUpload = multer({
   }),
 });
 
-
-const productUpload = multer({
+// Updated to handle both images and videos
+const mediaUpload = multer({
   storage: multerS3({
     s3: s3Client,
     bucket: "product-fbb",
@@ -53,54 +42,52 @@ const productUpload = multer({
   }),
 });
 
-const handleProductImages = async (req, res, next) => {
-    try {
-      const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
-      req.existingImages = existingImages;
-  
-      const filesToUpload = [];
-  
-      for (let i = 1; i <= 4; i++) {
-        const fieldName = `image${i}`;
-        if (req.files?.[fieldName] || !existingImages[i - 1]) {
-          filesToUpload.push({ name: fieldName, maxCount: 1 });
-        }
+const handleProductMedia = async (req, res, next) => {
+  try {
+    // Parse existing media if provided
+    const existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : {};
+    const existingVideos = req.body.existingVideos ? JSON.parse(req.body.existingVideos) : {};
+    
+    req.existingImages = existingImages;
+    req.existingVideos = existingVideos;
+    
+    const mediaFields = [
+      { name: 'image1', maxCount: 1 },
+      { name: 'image2', maxCount: 1 },
+      { name: 'image3', maxCount: 1 },
+      { name: 'image4', maxCount: 1 },
+      { name: 'video1', maxCount: 1 },
+      { name: 'video2', maxCount: 1 }
+    ];
+    
+    return mediaUpload.fields(mediaFields)(req, res, (err) => {
+      if (err) {
+        console.error("Error uploading files:", err);
+        return res.status(400).json({ error: `Error uploading files: ${err.message}` });
       }
-  
-      if (filesToUpload.length > 0) {
-        return productUpload.fields(filesToUpload)(req, res, (err) => {
-          if (err) {
-            console.error("Error uploading files:", err);
-            return res.status(400).json({ error: "Error uploading files" });
-          }
-          next();
-        });
-      }
-  
       next();
-    } catch (error) {
-      console.error("Error in handleProductImages:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  };
+    });
+  } catch (error) {
+    console.error("Error in handleProductMedia:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-SellerRouter.post("/register",SignUp)
-SellerRouter.post("/login",login)
-SellerRouter.post("/add-product", productUpload.fields([
-    { name: 'image1', maxCount: 1 },
-    { name: 'image2', maxCount: 1 },
-    { name: 'image3', maxCount: 1 },
-    { name: 'image4', maxCount: 1 }
-  ]), addProduct);
+SellerRouter.post("/register", SignUp);
+SellerRouter.post("/login", login);
 
-  SellerRouter.get("/get-products/:id", getProducts);
-  SellerRouter.put("/edit-product/:id", handleProductImages, updateProduct);
+// Updated to use the handleProductMedia middleware
+SellerRouter.post("/add-product", handleProductMedia, addProduct);
 
-  SellerRouter.post('/reset-password/:userId', resetPassword);
-  SellerRouter.put('/update-profile/:userId', profileImageUpload.single('profileImage'), updateProfile);
-  SellerRouter.delete("/delete-product/:id",deleteProduct)
+SellerRouter.get("/get-products/:id", getProducts);
 
+// Updated to use the handleProductMedia middleware
+SellerRouter.put("/edit-product/:id", handleProductMedia, updateProduct);
 
+SellerRouter.post('/reset-password/:userId', resetPassword);
+
+SellerRouter.put('/update-profile/:userId', profileImageUpload.single('profileImage'), updateProfile);
+
+SellerRouter.delete("/delete-product/:id", deleteProduct);
 
 export default SellerRouter;
-

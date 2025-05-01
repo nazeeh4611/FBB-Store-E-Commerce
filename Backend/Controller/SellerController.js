@@ -92,83 +92,97 @@ export const SignUp = async(req,res)=>{
     }
   };
 
-  export const addProduct = async (req, res) => {
-    try {
-  
-      console.log("request vernd",req.body)
-      const { name, brand, priceINR, priceAED, categoryId,subCategoryId ,sellerId} = req.body;
-  
-      // Validate required fields
-      if (!name || !brand || !priceINR || !priceAED || !categoryId) {
-        return res.status(400).json({
-          success: false,
-          message: "Missing required fields"
-        });
-      }
-  
-      // Validate category exists
-      const categoryExists = await categoryModel.findById(categoryId);
-      if (!categoryExists) {
-        return res.status(404).json({
-          success: false,
-          message: "Category not found"
-        });
-      }
-  
-      // Process images
-      const images = {};
-      if (req.files) {
-        for (let i = 1; i <= 4; i++) {
-          const fieldName = `image${i}`;
-          if (req.files[fieldName] && req.files[fieldName][0]) {
-            images[fieldName] = req.files[fieldName][0].location;
-          }
-        }
-      }
-      console.log(images,"this be teh image")
-  
-      // Ensure at least one image is uploaded
-      if (!images.image1) {
-        return res.status(400).json({
-          success: false,
-          message: "At least one product image is required"
-        });
-      }
-  
-      // Create product object
-      const productData = {
-        name,
-        brand,
-        priceINR: Number(priceINR),
-        priceAED: Number(priceAED),
-        images,
-        subCategoryId,
-        categoryId,
-        seller:sellerId
-      };
-  
-      // Save to database
-      const product = await productModel.create(productData);
+ // 2. Updated Add Product Controller
+export const addProduct = async (req, res) => {
+  try {
+    console.log("request body", req.body);
+    const { name, brand, priceINR, priceAED, categoryId, subCategoryId, sellerId } = req.body;
 
-      await SellerModel.findByIdAndUpdate(product.seller, {
-        $addToSet: { categories: productData.categoryId }
-      });
-      
-  
-      res.status(201).json({
-        success: true,
-        message: "Product added successfully",
-        data: product
-      });
-    } catch (error) {
-      console.error('Error adding product:', error);
-      res.status(500).json({
+    // Validate required fields
+    if (!name || !brand || !priceINR || !priceAED || !categoryId) {
+      return res.status(400).json({
         success: false,
-        message: "Failed to add product",
-        error: error.message
+        message: "Missing required fields"
       });
     }
-  };
+
+    // Validate category exists
+    const categoryExists = await categoryModel.findById(categoryId);
+    if (!categoryExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found"
+      });
+    }
+
+    // Process images and videos
+    const images = {};
+    const videos = {};
+
+    if (req.files) {
+      // Process images
+      for (let i = 1; i <= 4; i++) {
+        const fieldName = `image${i}`;
+        if (req.files[fieldName] && req.files[fieldName][0]) {
+          images[fieldName] = req.files[fieldName][0].location;
+        }
+      }
+
+      // Process videos
+      for (let i = 1; i <= 2; i++) {
+        const fieldName = `video${i}`;
+        if (req.files[fieldName] && req.files[fieldName][0]) {
+          videos[fieldName] = req.files[fieldName][0].location;
+        }
+      }
+    }
+
+    console.log(images, "these are the images");
+    console.log(videos, "these are the videos");
+
+    // Ensure at least one image is uploaded
+    if (!images.image1) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one product image is required"
+      });
+    }
+
+    // Create product object
+    const productData = {
+      name,
+      brand,
+      priceINR: Number(priceINR),
+      priceAED: Number(priceAED),
+      images,
+      videos, // Add videos to the product data
+      subCategoryId,
+      categoryId,
+      seller: sellerId
+    };
+
+    // Save to database
+    const product = await productModel.create(productData);
+
+    await SellerModel.findByIdAndUpdate(product.seller, {
+      $addToSet: { categories: productData.categoryId }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      data: product
+    });
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add product",
+      error: error.message
+    });
+  }
+};
+
 
 
 
@@ -251,7 +265,8 @@ export const SignUp = async(req,res)=>{
         priceINR,
         priceAED,
         isTrending,
-        existingImages
+        existingImages,
+        existingVideos
       } = req.body;
   
       // Get the current product
@@ -271,24 +286,64 @@ export const SignUp = async(req,res)=>{
         parsedExistingImages = [];
       }
   
+      // Parse existing videos if it's a string
+      let parsedExistingVideos = existingVideos;
+      try {
+        if (typeof existingVideos === 'string') {
+          parsedExistingVideos = JSON.parse(existingVideos);
+        }
+      } catch (error) {
+        console.error('Error parsing existing videos:', error);
+        parsedExistingVideos = [];
+      }
+  
       // Handle new uploaded images
       const newImages = {};
+      const newVideos = {};
+  
       if (req.files) {
-        Object.keys(req.files).forEach((key) => {
-          newImages[key] = req.files[key][0].location;
-        });
+        // Process new images
+        for (let i = 1; i <= 4; i++) {
+          const fieldName = `image${i}`;
+          if (req.files[fieldName] && req.files[fieldName][0]) {
+            newImages[fieldName] = req.files[fieldName][0].location;
+          }
+        }
+  
+        // Process new videos
+        for (let i = 1; i <= 2; i++) {
+          const fieldName = `video${i}`;
+          if (req.files[fieldName] && req.files[fieldName][0]) {
+            newVideos[fieldName] = req.files[fieldName][0].location;
+          }
+        }
       }
   
       // Combine existing and new images
-      const finalImages = [];
-      for (let i = 0; i < 4; i++) {
-        const newImage = newImages[`image${i + 1}`];
-        const existingImage = parsedExistingImages[i];
+      const finalImages = {};
+      for (let i = 1; i <= 4; i++) {
+        const fieldName = `image${i}`;
+        const newImage = newImages[fieldName];
+        const existingImage = parsedExistingImages[fieldName];
         
         if (newImage) {
-          finalImages.push(newImage);
+          finalImages[fieldName] = newImage;
         } else if (existingImage) {
-          finalImages.push(existingImage);
+          finalImages[fieldName] = existingImage;
+        }
+      }
+  
+      // Combine existing and new videos
+      const finalVideos = {};
+      for (let i = 1; i <= 2; i++) {
+        const fieldName = `video${i}`;
+        const newVideo = newVideos[fieldName];
+        const existingVideo = parsedExistingVideos[fieldName];
+        
+        if (newVideo) {
+          finalVideos[fieldName] = newVideo;
+        } else if (existingVideo) {
+          finalVideos[fieldName] = existingVideo;
         }
       }
   
@@ -303,6 +358,7 @@ export const SignUp = async(req,res)=>{
           priceINR,
           priceAED,
           images: finalImages,
+          videos: finalVideos, // Add videos to the update
           trending: isTrending === 'true'
         },
         { new: true }
@@ -315,6 +371,7 @@ export const SignUp = async(req,res)=>{
       res.status(500).json({ message: error.message });
     }
   };
+  
 
 
   export const updateProfile = async (req, res) => {
