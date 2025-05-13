@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "../Layouts/button"
-import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, Shield, Calendar, Award, Play } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingBag, Truck, Shield, Play } from "lucide-react"
 import { cn } from "../../lib/util"
 import { useParams } from "react-router-dom"
 import axios from "axios"
