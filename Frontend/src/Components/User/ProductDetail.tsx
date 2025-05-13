@@ -32,6 +32,7 @@ interface ProductData {
   active: boolean
   images: ProductImages
   videos?: ProductVideos
+  description: string // Added description field
   createdAt: string
   updatedAt: string
   seller: Seller
@@ -508,6 +509,24 @@ I'm interested in this product. Could you please provide more information?`)
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+              className="pt-4 border-t"
+            >
+              
+                      {productData.description && (
+          <>
+            <h3 className="font-semibold text-gray-900 mb-2">Product Description</h3>
+            <div className="text-gray-700 space-y-2">
+              <p>{productData.description}</p>
+            </div>
+          </>
+        )}
+
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.4 }}
               className="space-y-4 pt-4"
             >
@@ -564,7 +583,7 @@ I'm interested in this product. Could you please provide more information?`)
                 </div>
                 <div className="text-sm">
                   <p className="font-medium">Free Shipping</p>
-                  <p className="text-gray-500">On orders over ₹5000</p>
+                  <p className="text-gray-500">On selected products</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -572,26 +591,8 @@ I'm interested in this product. Could you please provide more information?`)
                   <Shield className="h-5 w-5 text-gray-700" />
                 </div>
                 <div className="text-sm">
-                  <p className="font-medium">1 Year Warranty</p>
-                  <p className="text-gray-500">100% Genuine Products</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-gray-100 p-2 rounded-full">
-                  <Calendar className="h-5 w-5 text-gray-700" />
-                </div>
-                <div className="text-sm">
-                  <p className="font-medium">Easy Returns</p>
-                  <p className="text-gray-500">30 Days Return Policy</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-gray-100 p-2 rounded-full">
-                  <Award className="h-5 w-5 text-gray-700" />
-                </div>
-                <div className="text-sm">
                   <p className="font-medium">Premium Quality</p>
-                  <p className="text-gray-500">Exclusive Collection</p>
+                  <p className="text-gray-500">100% Genuine Products</p>
                 </div>
               </div>
             </motion.div>

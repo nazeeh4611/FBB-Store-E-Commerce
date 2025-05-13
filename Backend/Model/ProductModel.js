@@ -18,6 +18,9 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  description:{
+   type:String,
+  },
   images: {
     image1: { type: String, required: true },  // First image is required
     image2: { type: String },

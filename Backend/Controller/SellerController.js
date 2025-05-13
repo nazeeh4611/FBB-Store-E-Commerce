@@ -96,7 +96,7 @@ export const SignUp = async(req,res)=>{
 export const addProduct = async (req, res) => {
   try {
     console.log("request body", req.body);
-    const { name, brand, priceINR, priceAED, categoryId, subCategoryId, sellerId } = req.body;
+    const { name, brand, priceINR, priceAED, categoryId, subCategoryId, sellerId,description } = req.body;
 
     // Validate required fields
     if (!name || !brand || !priceINR || !priceAED || !categoryId) {
@@ -154,6 +154,7 @@ export const addProduct = async (req, res) => {
       brand,
       priceINR: Number(priceINR),
       priceAED: Number(priceAED),
+      description,
       images,
       videos, // Add videos to the product data
       subCategoryId,
@@ -266,7 +267,8 @@ export const addProduct = async (req, res) => {
         priceAED,
         isTrending,
         existingImages,
-        existingVideos
+        existingVideos,
+        description
       } = req.body;
   
       // Get the current product
@@ -357,6 +359,7 @@ export const addProduct = async (req, res) => {
           subCategoryId,
           priceINR,
           priceAED,
+          description,
           images: finalImages,
           videos: finalVideos, // Add videos to the update
           trending: isTrending === 'true'
