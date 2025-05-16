@@ -19,39 +19,35 @@ databaseConnection();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middleware
+// ✅ Middleware to handle large payloads
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+
+// ✅ Allow both local and production domains (adjust as needed)
 app.use(cors({
-    origin: 'https://flybuybrand.com',
+    origin: ['http://localhost:5173', 'https://flybuybrand.com'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
 }));
 
-// app.use(cors({
-//     origin: 'http://localhost:5173',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type'],
-//     credentials: true
-// }));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+// ✅ API Routes
 app.use('/api/admin', adminRouter);
 app.use('/api/', UserRoute);
-app.use("/api/seller",SellerRouter)
+app.use('/api/seller', SellerRouter);
 
-// Serve static files from React build
+// ✅ Serve static files (React build)
 app.use(express.static(path.join(__dirname, '../Backend/build')));
 
-// Catch-all route to serve React frontend
+// ✅ Basic health check
 app.get('/', (req, res) => {
     res.send('Backend is running');
 });
 
-
+// ✅ Catch-all route for React Router
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Backend/build', 'index.html'));
 });
 
-app.listen(PORT, () => console.log('Server is running at http://localhost:3000'));
+// ✅ Start the server
+app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
