@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // ✅ Allow both local and production domains (adjust as needed)
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://flybuybrand.com'],
+    origin: ['http://localhost:5173', 'https://flybuybrand.com','https://fbb-store-e-commerce.vercel.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -36,18 +36,14 @@ app.use('/api/admin', adminRouter);
 app.use('/api/', UserRoute);
 app.use('/api/seller', SellerRouter);
 
-// ✅ Serve static files (React build)
 app.use(express.static(path.join(__dirname, '../Backend/build')));
 
-// ✅ Basic health check
 app.get('/', (req, res) => {
     res.send('Backend is running');
 });
 
-// ✅ Catch-all route for React Router
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Backend/build', 'index.html'));
 });
 
-// ✅ Start the server
 app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
