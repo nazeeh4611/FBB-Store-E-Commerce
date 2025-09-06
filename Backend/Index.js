@@ -36,14 +36,6 @@ app.use('/api/admin', adminRouter);
 app.use('/api/', UserRoute);
 app.use('/api/seller', SellerRouter);
 
-app.use(express.static(path.join(__dirname, '../Backend/build')));
 
-app.get('/', (req, res) => {
-    res.send('Backend is running');
-});
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../Backend/build', 'index.html'));
-});
 
 app.listen(PORT, () => console.log(`Server is running at http://localhost:${PORT}`));
