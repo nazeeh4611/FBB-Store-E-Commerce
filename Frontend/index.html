@@ -2,19 +2,81 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>FBB Store - Premium Fashion & Lifestyle Shopping | Fly Buy Brand</title>
+
+    <meta name="description" content="FBB Store - India's premium fashion destination. Shop luxury clothing, accessories, watches, home appliances & more from verified sellers with secure checkout and fast delivery." />
+    <meta name="keywords" content="fashion, clothing, accessories, watches, sunglasses, online shopping India, premium fashion, FBB Store, Fly Buy Brand" />
+    <meta name="author" content="FBB Store" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="canonical" href="https://www.flybuybrand.com/" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.flybuybrand.com/" />
+    <meta property="og:site_name" content="FBB Store" />
+    <meta property="og:title" content="FBB Store - Premium Fashion & Lifestyle Shopping" />
+    <meta property="og:description" content="Curated luxury fashion, accessories and lifestyle products from verified sellers." />
+    <meta property="og:image" content="https://www.flybuybrand.com/logo-512.png" />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="FBB Store - Premium Fashion & Lifestyle Shopping" />
+    <meta name="twitter:description" content="Curated luxury fashion, accessories and lifestyle products from verified sellers." />
+    <meta name="twitter:image" content="https://www.flybuybrand.com/logo-512.png" />
+
+    <!-- Icons -->
     <link rel="icon" type="image/png" href="/fbb.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FLY BUY BRAND</title>
-    <!-- Add more specific meta tags -->
-    <meta name="description" content="FBB Store has grown to become a leading e-commerce destination for fashion-conscious individuals and families.">
-    <meta name="keywords" content="fashion, clothing, accessories, online shopping">
-    <!-- Add Open Graph tags for better social sharing -->
-    <meta property="og:title" content="FLY BUY BRAND">
-    <meta property="og:description" content="Experience The Luxury - Your Premier Fashion Destination">
-    <meta property="og:type" content="website">
-</head>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="FBB Store" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Connect early to the API, image CDN and fonts -->
+    <link rel="preconnect" href="https://fbb-store-backend-3eix.onrender.com" crossorigin />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "OnlineStore",
+      "name": "FBB Store",
+      "alternateName": "Fly Buy Brand",
+      "url": "https://www.flybuybrand.com/",
+      "logo": "https://www.flybuybrand.com/logo-512.png",
+      "telephone": "+91-98330-23277",
+      "email": "flybuybrand26@gmail.com",
+      "sameAs": ["https://www.instagram.com/fbb_store_"],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Nooras Tower, near Supplyco, Chettipadi",
+        "addressLocality": "Malappuram",
+        "addressRegion": "Kerala",
+        "postalCode": "676319",
+        "addressCountry": "IN"
+      }
+    }
+    </script>
+
+    <style>
+      /* Instant first paint while JS loads */
+      html, body { margin: 0; background: #fff; }
+      #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #boot span { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e7e5e4; border-top-color: #111111; animation: boot-spin .8s linear infinite; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div id="boot" aria-label="Loading"><span></span></div></div>
+    <noscript>
+      <strong>FBB Store requires JavaScript to work properly. Please enable JavaScript to continue.</strong>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

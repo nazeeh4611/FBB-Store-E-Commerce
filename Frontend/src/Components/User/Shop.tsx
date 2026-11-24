@@ -1,359 +1,649 @@
-import { Heart, ShoppingBag, Filter, Search, ArrowRight } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import tshirt from "../Layouts/Img/tshirt.jpeg"
-import Footer from "../Layouts/Footer"
-import NavBar from "../Layouts/Navbar"
-import { Button } from "../Layouts/button"
-import { baseurl } from "../../Constant/Base"
-import axios from "axios"
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Check, ChevronDown, LayoutGrid, Rows3, SearchX, SlidersHorizontal, X } from "lucide-react";
+import NavBar from "../Layouts/Navbar";
+import Footer from "../Layouts/Footer";
+import api from "../../lib/api";
+import { effectivePrice, formatINR } from "../../lib/format";
+import { CategoryNode, FALLBACK_IMAGE, ProductSummary, sortForMenu, useCategoryTree } from "../../lib/shop";
+import { Breadcrumbs, Container, EmptyState, ProductGrid, btn } from "../Store/Sections";
+import { cn } from "../../lib/util";
 
-interface Category {
+interface Seller {
   _id: string;
   name: string;
-  image: string;
+  companyName?: string;
+  profileImage?: string;
+  city?: string;
+  categories?: string[];
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  brand: string;
-  category: Category | string;
-  priceINR: number;
-  priceAED: number;
-  images: {
-    image1: string;
-    image2: string;
-    image3: string;
-    image4: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  status?: 'LISTED' | 'UNLISTED';
-  rating?: number;
-  reviews?: number;
-  originalPrice?: number;
-  active: boolean;
-  __v: number;
-}
+const SORTS = [
+  { value: "featured", label: "Recommended" },
+  { value: "new", label: "Newest first" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "price-desc", label: "Price: high to low" },
+  { value: "discount", label: "Biggest discount" },
+  { value: "rating", label: "Top rated" },
+];
 
-export default function ShopLayout() {
-  const navigate = useNavigate()
-  const api = axios.create({
-    baseURL: baseurl,
+const PRICE_BANDS: [number, number | null][] = [
+  [0, 999],
+  [1000, 2499],
+  [2500, 4999],
+  [5000, 9999],
+  [10000, null],
+];
+
+const PAGE = 24;
+const sizeRank = (s: string) => {
+  const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+  const i = order.indexOf(s.toUpperCase());
+  if (i >= 0) return i;
+  const n = parseFloat(s);
+  return Number.isNaN(n) ? 100 : 20 + n;
+};
+const csv = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
+const brandOf = (p: ProductSummary) =>
+  p.brand || (typeof p.seller === "object" ? p.seller?.companyName || p.seller?.name : "") || "";
+
+/* ---------------------------------------------------------- filter UI */
+
+const FilterGroup: React.FC<React.PropsWithChildren<{ title: string; count?: number; defaultOpen?: boolean }>> = ({
+  title,
+  count,
+  defaultOpen = true,
+  children,
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-line py-4">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between text-left" aria-expanded={open}>
+        <span className="text-sm font-semibold uppercase tracking-wider">
+          {title}
+          {count ? <span className="ml-1.5 text-muted">({count})</span> : null}
+        </span>
+        <ChevronDown className={cn("h-4 w-4 transition", open && "rotate-180")} />
+      </button>
+      {open && <div className="pt-3">{children}</div>}
+    </div>
+  );
+};
+
+const CheckRow: React.FC<{ checked: boolean; onChange: () => void; label: React.ReactNode; count?: number }> = ({
+  checked,
+  onChange,
+  label,
+  count,
+}) => (
+  <label className="flex cursor-pointer items-center gap-3 py-1.5 text-sm">
+    <span
+      className={cn(
+        "grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[3px] border transition",
+        checked ? "border-ink bg-ink text-white" : "border-[#bdbdbd] bg-white"
+      )}
+    >
+      {checked && <Check className="h-3 w-3" strokeWidth={3} />}
+    </span>
+    <input type="checkbox" className="sr-only" checked={checked} onChange={onChange} />
+    <span className="flex-1">{label}</span>
+    {count !== undefined && <span className="text-xs text-muted">{count}</span>}
+  </label>
+);
+
+/* --------------------------------------------------------------- page */
+
+export default function ShopLayout(): JSX.Element {
+  const navigate = useNavigate();
+  const { categoryId, subcategoryId, sellerId } = useParams<{ categoryId?: string; subcategoryId?: string; sellerId?: string }>();
+  const [params, setParams] = useSearchParams();
+  const { categories, ready: catsReady } = useCategoryTree();
+
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [visible, setVisible] = useState(PAGE);
+  const [drawer, setDrawer] = useState(false);
+  const [dense, setDense] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("shop:dense") === "1";
+    } catch {
+      return false;
+    }
   });
+  const [minInput, setMinInput] = useState(params.get("min") || "");
+  const [maxInput, setMaxInput] = useState(params.get("max") || "");
 
-  const [favorites, setFavorites] = useState<{ [key: string]: boolean }>({})
-  const [visibleProducts, setVisibleProducts] = useState(6)
-  const [productsPerRow, setProductsPerRow] = useState(3)
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
-  const [showFilter, setShowFilter] = useState(false)
-
-  const toggleFavorite = (productName: string) => {
-    setFavorites((prev) => ({
-      ...prev,
-      [productName]: !prev[productName],
-    }))
-  }
-
-  const handleShowMore = () => {
-    setVisibleProducts((prev) => Math.min(prev + 6, allProducts.length))
-  }
-
-  const handleViewChange = (columns: number) => {
-    setProductsPerRow(columns)
-  }
-
-  const handleProductClick = (productId: string) => {
-    navigate(`/product/${productId}`)
-  }
-
-  const getCategories = async () => {
-    try {
-      const response = await api.get("/get-category")
-      if (response.data && Array.isArray(response.data)) {
-        setCategories(response.data)
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-    }
-  }
-
-  const getProducts = async () => {
-    try {
-      const response = await api.get("/get-product")
-      if (response.data && Array.isArray(response.data)) {
-        setAllProducts(response.data)
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error)
-    }
-  }
+  const q = params.get("q") || "";
+  const sort = params.get("sort") || "featured";
+  const sale = params.get("sale") === "1";
+  const trending = params.get("trending") === "true";
+  const inStock = params.get("stock") === "1";
+  const min = Number(params.get("min")) || 0;
+  const max = Number(params.get("max")) || 0;
+  const selSizes = csv(params.get("size"));
+  const selColors = csv(params.get("color"));
+  const selBrands = csv(params.get("brand"));
+  const sellerFilter = sellerId || params.get("seller") || "";
 
   useEffect(() => {
-    getProducts()
-    getCategories()
-  }, [])
+    setMinInput(params.get("min") || "");
+    setMaxInput(params.get("max") || "");
+  }, [params]);
 
-  const products = allProducts.slice(0, visibleProducts)
+  useEffect(() => {
+    api
+      .get("/sellers")
+      .then((r) => setSellers(r.data?.sellers || []))
+      .catch(() => {});
+  }, []);
+
+  /* context: which category/subcategory are we in? */
+  const ctx = useMemo(() => {
+    let category: CategoryNode | undefined;
+    let sub: { _id: string; name: string; image?: string } | undefined;
+    if (categoryId) category = categories.find((c) => c._id === categoryId);
+    if (subcategoryId) {
+      for (const c of categories) {
+        const s = c.subcategories?.find((x) => x._id === subcategoryId);
+        if (s) {
+          category = c;
+          sub = s;
+          break;
+        }
+      }
+    }
+    return { category, sub };
+  }, [categories, categoryId, subcategoryId]);
+
+  const seller = sellers.find((s) => s._id === sellerFilter);
+  const sellerName = seller ? seller.companyName || seller.name : "";
+
+  /* fetch */
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setError(false);
+    setVisible(PAGE);
+    const base: Record<string, string | number | boolean> = { limit: 100 };
+    if (subcategoryId) base.subcategory = subcategoryId;
+    else if (categoryId) base.category = categoryId;
+    if (sellerFilter) base.seller = sellerFilter;
+    if (q) base.search = q;
+    if (trending) base.trending = true;
+
+    (async () => {
+      try {
+        const first = await api.get("/products", { params: { ...base, page: 1 } });
+        let list: ProductSummary[] = first.data?.products || [];
+        const pages = Math.min(first.data?.totalPages || 1, 5);
+        if (pages > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: pages - 1 }, (_, i) => api.get("/products", { params: { ...base, page: i + 2 } }))
+          );
+          rest.forEach((r) => (list = list.concat(r.data?.products || [])));
+        }
+        if (!alive) return;
+        setProducts(list);
+        setTotal(first.data?.total ?? list.length);
+      } catch {
+        if (alive) {
+          setError(true);
+          setProducts([]);
+        }
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [categoryId, subcategoryId, sellerFilter, q, trending]);
+
+  /* facets from the fetched set */
+  const facets = useMemo(() => {
+    const sizes = new Map<string, number>();
+    const colors = new Map<string, number>();
+    const brands = new Map<string, number>();
+    let saleCount = 0;
+    for (const p of products) {
+      p.sizes?.forEach((s) => sizes.set(s, (sizes.get(s) || 0) + 1));
+      p.colors?.forEach((c) => colors.set(c, (colors.get(c) || 0) + 1));
+      const b = brandOf(p);
+      if (b) brands.set(b, (brands.get(b) || 0) + 1);
+      if (effectivePrice(p).percentOff > 0) saleCount++;
+    }
+    return {
+      sizes: [...sizes.entries()].sort((a, b) => sizeRank(a[0]) - sizeRank(b[0])),
+      colors: [...colors.entries()].sort((a, b) => b[1] - a[1]),
+      brands: [...brands.entries()].sort((a, b) => a[0].localeCompare(b[0])),
+      saleCount,
+    };
+  }, [products]);
+
+  /* filter + sort */
+  const results = useMemo(() => {
+    let list = products.filter((p) => {
+      const { price, percentOff } = effectivePrice(p);
+      if (sale && percentOff <= 0) return false;
+      if (inStock && !(Number(p.stock) > 0)) return false;
+      if (min && price < min) return false;
+      if (max && price > max) return false;
+      if (selSizes.length && !p.sizes?.some((s) => selSizes.includes(s))) return false;
+      if (selColors.length && !p.colors?.some((c) => selColors.includes(c))) return false;
+      if (selBrands.length && !selBrands.includes(brandOf(p))) return false;
+      return true;
+    });
+    const price = (p: ProductSummary) => effectivePrice(p).price;
+    switch (sort) {
+      case "new":
+        list = [...list].sort((a, b) => +new Date(b.createdAt || 0) - +new Date(a.createdAt || 0));
+        break;
+      case "price-asc":
+        list = [...list].sort((a, b) => price(a) - price(b));
+        break;
+      case "price-desc":
+        list = [...list].sort((a, b) => price(b) - price(a));
+        break;
+      case "discount":
+        list = [...list].sort((a, b) => effectivePrice(b).percentOff - effectivePrice(a).percentOff);
+        break;
+      case "rating":
+        list = [...list].sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0));
+        break;
+      default:
+        list = [...list].sort((a, b) => Number(!!b.trending) - Number(!!a.trending));
+    }
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, sale, inStock, min, max, sort, params]);
+
+  /* url helpers */
+  const setParam = (key: string, value: string | null) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next, { replace: true });
+    setVisible(PAGE);
+  };
+  const toggleList = (key: string, value: string) => {
+    const list = csv(params.get(key));
+    setParam(key, (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]).join(",") || null);
+  };
+  const applyPrice = (lo: string, hi: string) => {
+    const next = new URLSearchParams(params);
+    lo ? next.set("min", lo) : next.delete("min");
+    hi ? next.set("max", hi) : next.delete("max");
+    setParams(next, { replace: true });
+  };
+  const clearFilters = () => {
+    const next = new URLSearchParams();
+    if (q) next.set("q", q);
+    if (sort !== "featured") next.set("sort", sort);
+    setParams(next, { replace: true });
+  };
+
+  const chips: { label: string; clear: () => void }[] = [
+    ...(sale ? [{ label: "On sale", clear: () => setParam("sale", null) }] : []),
+    ...(trending ? [{ label: "Trending", clear: () => setParam("trending", null) }] : []),
+    ...(inStock ? [{ label: "In stock", clear: () => setParam("stock", null) }] : []),
+    ...(min || max
+      ? [{ label: `${formatINR(min)} – ${max ? formatINR(max) : "any"}`, clear: () => applyPrice("", "") }]
+      : []),
+    ...selSizes.map((s) => ({ label: `Size ${s}`, clear: () => toggleList("size", s) })),
+    ...selColors.map((c) => ({ label: c, clear: () => toggleList("color", c) })),
+    ...selBrands.map((b) => ({ label: b, clear: () => toggleList("brand", b) })),
+    ...(params.get("seller") && !sellerId ? [{ label: sellerName || "Seller", clear: () => setParam("seller", null) }] : []),
+  ];
+
+  /* titles */
+  const title = q
+    ? `Results for “${q}”`
+    : ctx.sub?.name || ctx.category?.name || sellerName || (sale ? "Sale" : trending ? "Trending now" : sort === "new" ? "New in" : "All products");
+
+  useEffect(() => {
+    document.title = `${title} · FBB Store`;
+  }, [title]);
+
+  const crumbs = [
+    { label: "Home", to: "/" },
+    { label: "Shop", to: "/shop" },
+    ...(ctx.category ? [{ label: ctx.category.name, to: `/shop/category/${ctx.category._id}` }] : []),
+    ...(ctx.sub ? [{ label: ctx.sub.name }] : []),
+    ...(sellerId && sellerName ? [{ label: sellerName }] : []),
+    ...(!ctx.category && !sellerId && title !== "All products" ? [{ label: title }] : []),
+  ];
+
+  const subChips = ctx.category?.subcategories || [];
+  const shown = results.slice(0, visible);
+  const sellerCats = seller?.categories?.length ? sortForMenu(categories.filter((c) => seller.categories!.includes(c._id))) : [];
+
+  const filterPanel = (
+    <div>
+      {/* categories */}
+      <FilterGroup title="Category">
+        <ul className="space-y-0.5 text-sm">
+          <li>
+            <Link
+              to={sellerId ? `/shop/seller/${sellerId}` : "/shop"}
+              className={cn("block py-1.5", !categoryId && !subcategoryId ? "font-semibold underline underline-offset-4" : "hover:underline")}
+            >
+              All categories
+            </Link>
+          </li>
+          {(!catsReady ? [] : sellerCats.length ? sellerCats : sortForMenu(categories)).map((c) => {
+            const active = c._id === ctx.category?._id;
+            const href = (path: string) => (sellerFilter ? `${path}?seller=${sellerFilter}` : path);
+            return (
+              <li key={c._id}>
+                <Link
+                  to={href(`/shop/category/${c._id}`)}
+                  className={cn("block py-1.5", active && !ctx.sub ? "font-semibold underline underline-offset-4" : "hover:underline")}
+                >
+                  {c.name}
+                </Link>
+                {active && !!c.subcategories?.length && (
+                  <ul className="mb-1 ml-3 border-l border-line pl-3">
+                    {c.subcategories.map((s) => (
+                      <li key={s._id}>
+                        <Link
+                          to={href(`/shop/subcategory/${s._id}`)}
+                          className={cn("block py-1 text-[13px]", s._id === ctx.sub?._id ? "font-semibold text-ink" : "text-ink-soft hover:underline")}
+                        >
+                          {s.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </FilterGroup>
+
+      <FilterGroup title="Offers & availability">
+        <CheckRow checked={sale} onChange={() => setParam("sale", sale ? null : "1")} label={<span className="font-medium text-sale">On sale</span>} count={facets.saleCount} />
+        <CheckRow checked={inStock} onChange={() => setParam("stock", inStock ? null : "1")} label="In stock only" />
+        <CheckRow checked={trending} onChange={() => setParam("trending", trending ? null : "true")} label="Trending" />
+      </FilterGroup>
+
+      <FilterGroup title="Price">
+        <div className="space-y-0.5">
+          {PRICE_BANDS.map(([lo, hi]) => {
+            const active = min === lo && (hi ? max === hi : !max);
+            return (
+              <CheckRow
+                key={lo}
+                checked={active}
+                onChange={() => (active ? applyPrice("", "") : applyPrice(lo ? String(lo) : "", hi ? String(hi) : ""))}
+                label={hi ? `${formatINR(lo)} – ${formatINR(hi)}` : `${formatINR(lo)} and above`}
+              />
+            );
+          })}
+        </div>
+        <form
+          className="mt-3 flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            applyPrice(minInput, maxInput);
+          }}
+        >
+          <input inputMode="numeric" value={minInput} onChange={(e) => setMinInput(e.target.value.replace(/\D/g, ""))} placeholder="Min ₹" aria-label="Minimum price" className="field py-2" />
+          <span className="text-muted">–</span>
+          <input inputMode="numeric" value={maxInput} onChange={(e) => setMaxInput(e.target.value.replace(/\D/g, ""))} placeholder="Max ₹" aria-label="Maximum price" className="field py-2" />
+          <button type="submit" className="rounded-md border border-ink px-3 py-2 text-xs font-semibold uppercase">Go</button>
+        </form>
+      </FilterGroup>
+
+      {facets.sizes.length > 0 && (
+        <FilterGroup title="Size" count={selSizes.length}>
+          <div className="flex flex-wrap gap-2">
+            {facets.sizes.map(([s]) => (
+              <button
+                key={s}
+                onClick={() => toggleList("size", s)}
+                aria-pressed={selSizes.includes(s)}
+                className={cn(
+                  "min-w-11 rounded-md border px-2.5 py-2 text-sm transition",
+                  selSizes.includes(s) ? "border-ink bg-ink text-white" : "border-line hover:border-ink"
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </FilterGroup>
+      )}
+
+      {facets.colors.length > 0 && (
+        <FilterGroup title="Colour" count={selColors.length}>
+          {facets.colors.slice(0, 12).map(([c, n]) => (
+            <CheckRow key={c} checked={selColors.includes(c)} onChange={() => toggleList("color", c)} label={c} count={n} />
+          ))}
+        </FilterGroup>
+      )}
+
+      {facets.brands.length > 1 && (
+        <FilterGroup title="Brand" count={selBrands.length} defaultOpen={false}>
+          {facets.brands.map(([b, n]) => (
+            <CheckRow key={b} checked={selBrands.includes(b)} onChange={() => toggleList("brand", b)} label={b} count={n} />
+          ))}
+        </FilterGroup>
+      )}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar isTransparent={false} />
-      
-      <div className="relative bg-black py-6 md:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="text-white">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Luxury Collection</h1>
-              <p className="text-gray-300 mb-6">Discover the latest in premium fashion and accessories</p>
-              <div className="flex flex-wrap gap-3">
-                <Button className="bg-white text-black hover:bg-gray-200 px-6 py-3 rounded-none">
-                  Shop Now <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Button className="border border-white text-white hover:bg-white/10 px-6 py-3 rounded-none">
-                  New Arrivals
-                </Button>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div className="relative h-64 w-full overflow-hidden">
-                <div className="absolute -right-16 top-0 h-48 w-48 rounded-full bg-gradient-to-br from-gold-300 to-gold-600 blur-2xl opacity-60"></div>
-                <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-gradient-to-tr from-gray-800 to-gray-600 blur-xl opacity-70"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="py-12 md:py-24">
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-gray-900 relative">
-            <span className="relative z-10">YOU MIGHT LIKE</span>
-            <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gray-900"></span>
-          </h2>
-          
-          <div className="relative">
-            <div className="flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto pb-6 snap-x scrollbar-hide -mx-4 px-4">
-              {categories.map((category) => (
-                <div key={category._id} className="flex flex-col items-center flex-shrink-0 snap-start">
-                  <div className="mb-4 h-16 w-16 md:h-24 md:w-24 overflow-hidden rounded-full shadow-md transition-transform hover:scale-105 border-2 border-gray-200 group">
-                    <img
-                      src={category.image || tshirt}
-                      alt={category.name}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs md:text-sm font-semibold text-gray-900">{category.name}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-gradient-to-r from-gray-50 to-transparent w-12 h-16 md:hidden"></div>
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-l from-gray-50 to-transparent w-12 h-16 md:hidden"></div>
-          </div>
-        </div>
-
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-200 pb-6 gap-4">
-          <div className="flex items-center gap-2">
-            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900">HOME</a>
-            <span className="text-gray-400">/</span>
-            <span className="text-sm font-medium text-gray-900">THE SHOP</span>
-          </div>
-          
-          <div className="relative w-full md:w-auto">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-              <div className="w-full md:w-auto">
-                <select className="w-full rounded-none border border-gray-300 px-4 py-2 text-sm focus:border-gray-500 focus:outline-none appearance-none bg-no-repeat bg-right">
-                  <option>DEFAULT SORTING</option>
-                  <option>PRICE: LOW TO HIGH</option>
-                  <option>PRICE: HIGH TO LOW</option>
-                  <option>NEW ARRIVALS</option>
-                </select>
-              </div>
-              
-              <div className="hidden md:flex items-center gap-3">
-                <span className="text-sm font-medium">VIEW</span>
-                {[2, 3, 4].map((num) => (
-                  <button 
-                    key={num} 
-                    className={`px-3 text-sm font-medium transition-colors ${
-                      productsPerRow === num 
-                        ? 'text-gray-900 underline' 
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                    onClick={() => handleViewChange(num)}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-              
-              <button 
-                className="flex items-center gap-2 rounded-none border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 w-full md:w-auto justify-center md:justify-start"
-                onClick={() => setShowFilter(!showFilter)}
-              >
-                <Filter className="h-4 w-4" />
-                FILTER
-              </button>
-              
-              <div className="hidden md:flex relative rounded-none border border-gray-300 overflow-hidden w-full md:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search products"
-                  className="w-full px-4 py-2 text-sm focus:outline-none"
-                />
-                <button className="absolute right-0 top-0 h-full px-3 bg-gray-100 flex items-center">
-                  <Search className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            
-            {showFilter && (
-              <div className="absolute left-0 top-full z-20 mt-2 w-full md:w-64 bg-white shadow-lg p-4 border border-gray-200">
-                <h3 className="font-medium text-lg mb-3">Filter By</h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Price Range</h4>
-                    <div className="flex gap-2 items-center">
-                      <input type="range" className="w-full" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-2">Categories</h4>
-                    <div className="space-y-2">
-                      {categories.slice(0, 3).map(cat => (
-                        <label key={cat._id} className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded" />
-                          <span>{cat.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-none">Apply Filters</Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div 
-          className={`grid gap-x-4 md:gap-x-8 gap-y-8 md:gap-y-12 ${
-            productsPerRow === 2 
-              ? 'grid-cols-2 sm:grid-cols-2' 
-              : productsPerRow === 3 
-                ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-          }`}
-        >
-          {products.map((product) => (
-            <div 
-              key={product._id} 
-              className="group relative flex flex-col"
-              onMouseEnter={() => setHoveredProduct(product._id)}
-              onMouseLeave={() => setHoveredProduct(null)}
-            >
-              <div 
-                className="relative aspect-[3/4] w-full overflow-hidden bg-gray-100 cursor-pointer transition-all duration-300"
-                onClick={() => handleProductClick(product._id)}
-              >
-                <img
-                  src={hoveredProduct === product._id && product.images.image2 ? product.images.image2 : product.images.image1 || tshirt}
-                  alt={product.name}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                {product.brand && (
-                  <div className="absolute left-0 top-0 z-10 bg-red-600 px-3 py-1 text-xs md:text-sm font-medium text-white">
-                    {product.brand}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity duration-300 group-hover:bg-opacity-10 pointer-events-none"></div>
-                
-                <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 py-3 px-4 transform translate-y-full transition-transform duration-300 group-hover:translate-y-0 flex justify-between items-center">
-                  <span className="text-sm font-medium">Quick View</span>
-                  <ShoppingBag className="h-5 w-5" />
-                </div>
-                
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(product.name);
-                  }}
-                  className="absolute right-3 top-3 z-10 rounded-full bg-white p-2 shadow-md transition-transform hover:scale-110"
-                  aria-label={favorites[product.name] ? "Remove from favorites" : "Add to favorites"}
-                >
-                  <Heart
-                    className={`h-4 w-4 ${favorites[product.name] ? "fill-red-500 text-red-500" : "text-gray-600"}`}
-                  />
-                </button>
-              </div>
-              <div className="mt-4 flex flex-col">
-                <p className="text-xs md:text-sm font-medium text-gray-500">
-                  {typeof product.category === 'object' ? product.category.name : 'Unknown Category'}
-                </p>
-                <h3 className="mt-1 md:mt-2 text-sm md:text-base font-semibold text-gray-900 truncate">{product.name}</h3>
-                <div className="mt-1 md:mt-2 flex items-center gap-2 md:gap-3">
-                  <p className="text-base md:text-lg font-bold text-gray-900">₹{product.priceINR}</p>
-                  {product.originalPrice && (
-                    <p className="text-xs md:text-sm text-gray-500 line-through">AED {product.originalPrice}</p>
-                  )}
-                </div>
-                {product.rating && (
-                  <div className="mt-1 md:mt-2 flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <span 
-                        key={i} 
-                        className={`text-xs md:text-sm ${i < Math.floor(product.rating || 0) ? 'text-amber-400' : 'text-gray-300'}`}
-                      >
-                        ★
-                      </span>
-                    ))}
-                    {product.reviews && (
-                      <span className="ml-1 text-xs text-gray-500">{product.reviews}+</span>
-                    )}
-                  </div>
+    <div className="flex min-h-screen flex-col bg-white">
+      <NavBar />
+      <main className="flex-1">
+        {/* seller banner */}
+        {sellerId && seller && (
+          <div className="border-b border-line bg-canvas">
+            <Container className="flex items-center gap-5 py-6">
+              <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-md border border-line bg-white sm:h-24 sm:w-24">
+                {seller.profileImage ? (
+                  <img src={seller.profileImage} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="font-display text-3xl font-semibold uppercase">{sellerName.slice(0, 2)}</span>
                 )}
               </div>
-            </div>
-          ))}
-        </div>
-
-        {visibleProducts < allProducts.length && (
-          <div className="mt-16 flex justify-center pb-16">
-            <Button
-              onClick={handleShowMore}
-              className="rounded-none bg-black px-8 py-3 md:py-6 text-sm md:text-base font-semibold text-white transition-colors hover:bg-gray-800 relative overflow-hidden group"
-            >
-              <span className="relative z-10">Show More Products</span>
-              <span className="absolute inset-0 bg-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-            </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Official store</p>
+                <h2 className="truncate font-display text-2xl font-semibold uppercase sm:text-3xl">{sellerName}</h2>
+                {seller.city && <p className="text-sm text-muted">{seller.city}</p>}
+              </div>
+            </Container>
           </div>
         )}
-      </div>
 
-      <div className="bg-gray-100 py-12 mt-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Stay updated with our latest collections, exclusive offers, and fashion insights.</p>
+        <Container className="pt-5 sm:pt-7">
+          <Breadcrumbs items={crumbs} />
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+            <h1 className="font-display text-3xl font-semibold uppercase leading-tight sm:text-4xl">{title}</h1>
+            {!loading && (
+              <p className="text-sm text-muted">
+                {results.length} {results.length === 1 ? "product" : "products"}
+                {results.length !== total && total > 0 && ` of ${total}`}
+              </p>
+            )}
           </div>
-          <div className="max-w-md mx-auto flex flex-col sm:flex-row gap-3">
-            <input 
-              type="email" 
-              placeholder="Your email address" 
-              className="flex-grow px-4 py-3 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-900 rounded-none"
-            />
-            <Button className="bg-black text-white hover:bg-gray-800 px-6 py-3 rounded-none">
-              Subscribe
-            </Button>
+
+          {/* subcategory chips */}
+          {subChips.length > 0 && (
+            <div className="no-scrollbar -mx-4 mt-5 flex gap-4 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+              <Link
+                to={`/shop/category/${ctx.category!._id}`}
+                className="group w-20 shrink-0 text-center sm:w-24"
+                aria-current={!ctx.sub ? "page" : undefined}
+              >
+                <div className={cn("grid aspect-square place-items-center overflow-hidden rounded-full border-2 bg-canvas", !ctx.sub ? "border-ink" : "border-transparent")}>
+                  <span className="text-xs font-semibold uppercase">All</span>
+                </div>
+                <p className={cn("mt-2 truncate text-xs", !ctx.sub ? "font-semibold" : "")}>View all</p>
+              </Link>
+              {subChips.map((s) => (
+                <Link key={s._id} to={`/shop/subcategory/${s._id}`} className="group w-20 shrink-0 text-center sm:w-24" aria-current={ctx.sub?._id === s._id ? "page" : undefined}>
+                  <div className={cn("aspect-square overflow-hidden rounded-full border-2 bg-canvas", ctx.sub?._id === s._id ? "border-ink" : "border-transparent")}>
+                    <img src={s.image || FALLBACK_IMAGE} alt="" loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+                  </div>
+                  <p className={cn("mt-2 truncate text-xs", ctx.sub?._id === s._id ? "font-semibold" : "")}>{s.name}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* toolbar */}
+          <div className="sticky top-[107px] z-30 -mx-4 mt-5 flex items-center gap-2 border-y border-line bg-white/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-x-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
+            <button
+              onClick={() => setDrawer(true)}
+              className="flex items-center gap-2 rounded-md border border-ink px-4 py-2.5 text-sm font-semibold lg:hidden"
+            >
+              <SlidersHorizontal className="h-4 w-4" /> Filter
+              {chips.length > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] text-white">{chips.length}</span>}
+            </button>
+            <div className="hidden flex-1 flex-wrap items-center gap-2 lg:flex">
+              {chips.map((c) => (
+                <button key={c.label} onClick={c.clear} className="flex items-center gap-1.5 rounded-full bg-canvas px-3 py-1.5 text-xs font-medium hover:bg-line">
+                  {c.label} <X className="h-3 w-3" />
+                </button>
+              ))}
+              {chips.length > 0 && (
+                <button onClick={clearFilters} className="px-1 text-xs font-semibold underline underline-offset-4">
+                  Clear all
+                </button>
+              )}
+            </div>
+            <label className="relative ml-auto flex items-center">
+              <span className="sr-only">Sort by</span>
+              <select
+                value={sort}
+                onChange={(e) => setParam("sort", e.target.value === "featured" ? null : e.target.value)}
+                className="appearance-none rounded-md border border-line bg-white py-2.5 pl-3 pr-9 text-sm font-medium outline-none focus:border-ink"
+              >
+                {SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    Sort: {s.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4" />
+            </label>
+            <div className="hidden items-center rounded-md border border-line md:flex">
+              <button
+                onClick={() => {
+                  setDense(false);
+                  try { localStorage.setItem("shop:dense", "0"); } catch { /* ignore */ }
+                }}
+                aria-label="Large tiles"
+                aria-pressed={!dense}
+                className={cn("grid h-10 w-10 place-items-center rounded-l-md", !dense ? "bg-ink text-white" : "text-muted")}
+              >
+                <Rows3 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setDense(true);
+                  try { localStorage.setItem("shop:dense", "1"); } catch { /* ignore */ }
+                }}
+                aria-label="More per row"
+                aria-pressed={dense}
+                className={cn("grid h-10 w-10 place-items-center rounded-r-md", dense ? "bg-ink text-white" : "text-muted")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
+
+          <div className="grid gap-10 pb-16 pt-6 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr]">
+            <aside className="hidden lg:block">
+              <div className="sticky top-[140px] max-h-[calc(100vh-160px)] overflow-y-auto pr-2">{filterPanel}</div>
+            </aside>
+
+            <section aria-live="polite" aria-busy={loading}>
+              {error ? (
+                <EmptyState
+                  icon={<SearchX className="h-7 w-7" />}
+                  title="We couldn't load products"
+                  message="The store is taking a moment to respond. Please try again."
+                  action={<button onClick={() => navigate(0)} className={btn.primary}>Try again</button>}
+                />
+              ) : !loading && results.length === 0 ? (
+                <EmptyState
+                  icon={<SearchX className="h-7 w-7" />}
+                  title={q ? `No results for “${q}”` : "No products match"}
+                  message={chips.length ? "Try removing a filter or two to see more." : "Check back soon — new styles arrive every week."}
+                  action={
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {chips.length > 0 && <button onClick={clearFilters} className={btn.primary}>Clear filters</button>}
+                      <Link to="/shop" className={btn.secondary}>Browse everything</Link>
+                    </div>
+                  }
+                />
+              ) : (
+                <>
+                  <ProductGrid products={shown} loading={loading} columns={dense ? 4 : 3} skeletons={dense ? 8 : 6} />
+                  {!loading && results.length > visible && (
+                    <div className="mt-14 flex flex-col items-center gap-4">
+                      <p className="text-sm text-muted">
+                        You've viewed {shown.length} of {results.length} products
+                      </p>
+                      <div className="h-0.5 w-56 overflow-hidden rounded-full bg-line">
+                        <div className="h-full bg-ink" style={{ width: `${(shown.length / results.length) * 100}%` }} />
+                      </div>
+                      <button onClick={() => setVisible((v) => v + PAGE)} className={btn.secondary}>
+                        Load more
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          </div>
+        </Container>
+      </main>
+
+      {/* mobile filters */}
+      <div className={cn("fixed inset-0 z-[90] lg:hidden", drawer ? "visible" : "pointer-events-none invisible")} aria-hidden={!drawer}>
+        <div onClick={() => setDrawer(false)} className={cn("absolute inset-0 bg-black/40 transition-opacity", drawer ? "opacity-100" : "opacity-0")} />
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filters"
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-full max-w-sm flex-col bg-white transition-transform duration-300",
+            drawer ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <h2 className="font-display text-lg font-semibold uppercase">Filter</h2>
+            <button onClick={() => setDrawer(false)} aria-label="Close filters" className="-mr-2 grid h-10 w-10 place-items-center rounded-full hover:bg-canvas">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-2 border-b border-line px-5 py-3">
+              {chips.map((c) => (
+                <button key={c.label} onClick={c.clear} className="flex items-center gap-1.5 rounded-full bg-canvas px-3 py-1.5 text-xs font-medium">
+                  {c.label} <X className="h-3 w-3" />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto px-5">{filterPanel}</div>
+          <div className="grid grid-cols-2 gap-3 border-t border-line p-4">
+            <button onClick={clearFilters} className={btn.secondary}>Clear</button>
+            <button onClick={() => setDrawer(false)} className={btn.primary}>
+              Show {results.length}
+            </button>
+          </div>
+        </aside>
       </div>
 
       <Footer />
     </div>
-  )
+  );
 }
